@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	m := menu.MenuFactory()
+	m := menu.MenuFactory(words)
 	r := renderer.RendererFactory(m)
 	if err := r.Init(); err != nil {
 		panic(err)

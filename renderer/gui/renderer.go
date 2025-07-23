@@ -3,6 +3,7 @@ package gui
 import (
 	"fmt"
 	"runtime"
+	"strings"
 
 	"github.com/go-gl/gl/all-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
@@ -77,6 +78,50 @@ func (r *GUIRenderer) Cleanup() error {
 	return nil
 }
 
+func (r *GUIRenderer) renderInput(font *glfont.Font) error {
+	const inputSize int = 20
+	input := r.M.Input()
+
+	var inputDisplay string
+	if len(input) < inputSize {
+		inputDisplay = input + strings.Repeat(" ", inputSize-len(input))
+	} else {
+		// this gives us a "scroll" when typing long searches
+		start := 0
+		end := inputSize
+		shift := len(input) - inputSize
+		inputDisplay = input[start+shift : end+shift]
+	}
+	//spacing := strings.Repeat(" ", minSpace)
+
+	font.SetColor(1.0, 1.0, 1.0, 1.0)
+	return font.Printf(0, float32(r.height)/2, 1.0, inputDisplay)
+}
+
+// TODO: this isn't right at all
+func (r *GUIRenderer) renderItems(font *glfont.Font) error {
+	items := r.M.Search()
+	maxLen := 100
+	//minLen := 50
+
+	totalLen := 0
+
+	start := r.M.Current()
+	i := start
+	for j := start; j < len(items)-1; j++ {
+		totalLen += len(items[j]) + 1
+		if totalLen > maxLen {
+			break
+		}
+		i++
+	}
+	displayedList := items[start:i]
+
+	displayStr := /*strings.Repeat(" ", maxLen-totalLen) +*/ strings.Join(displayedList, " ")
+
+	return font.Printf(21, float32(r.height)/2, 1.0, displayStr)
+}
+
 func (r *GUIRenderer) Render() error {
 	fontSize := int32(float32(r.height) * .6)
 	font, err := glfont.LoadFontBytes(fnt.RobotoTTF, fontSize, r.width, r.height)
@@ -87,12 +132,15 @@ func (r *GUIRenderer) Render() error {
 		// background color
 		gl.ClearColor(0.1, 0.1, 0.1, 1.0)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-
-		font.SetColor(1.0, 1.0, 1.0, 1.0)
-		err := font.Printf(0, float32(r.height)/2, 1.0, r.M.Input())
+		err := r.renderInput(font)
 		if err != nil {
 			return err
 		}
+		err = r.renderItems(font)
+		if err != nil {
+			return err
+		}
+
 		r.w.SwapBuffers()
 		glfw.PollEvents()
 	}

@@ -7,18 +7,23 @@ type Menu interface {
 	Add(c rune)
 	Remove()
 	Input() string
+	Current() int
+	Left()
+	Right()
+	//Items() []string
 }
 
-func MenuFactory() Menu {
+func MenuFactory(items []string) Menu {
 	return &BasicMenu{
-		items: make([]string, 0),
+		items: items,
 		input: make([]rune, 0),
 	}
 }
 
 type BasicMenu struct {
-	items []string
-	input []rune
+	items   []string
+	input   []rune
+	current int
 }
 
 func (s *BasicMenu) Search() []string {
@@ -43,4 +48,23 @@ func (s *BasicMenu) Remove() {
 
 func (s *BasicMenu) Input() string {
 	return string(s.input)
+}
+
+func (s *BasicMenu) Current() int {
+	return s.current
+}
+
+func (s *BasicMenu) Left() {
+	if s.current > 0 {
+		s.current--
+	}
+}
+func (s *BasicMenu) Right() {
+	if s.current < len(s.items)-1 {
+		s.current++
+	}
+}
+
+func (s *BasicMenu) Items() []string {
+	return s.items
 }
