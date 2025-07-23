@@ -12,6 +12,10 @@ import (
 	"gioui.org/widget/material"
 )
 
+var txt []string = []string{
+	"asdf", "asdf", "adsf",
+}
+
 func main() {
 
 	go func() {
@@ -32,6 +36,7 @@ func draw(w *app.Window) error {
 	var ops op.Ops
 	th := material.NewTheme()
 	var ed widget.Editor
+	var list widget.List
 
 	init := false
 
@@ -44,10 +49,18 @@ func draw(w *app.Window) error {
 				init = true
 				gtx.Execute(key.FocusCmd{Tag: &ed})
 			}
-			layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					med := material.Editor(th, &ed, "search...")
 					return med.Layout(gtx)
+				}),
+				// Spacer that expands to take all remaining space
+				layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+					return layout.Dimensions{Size: gtx.Constraints.Max} // Just occupy space, no drawing needed
+				}),
+
+				layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+					return nil
 				}),
 			)
 			e.Frame(gtx.Ops)
