@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	//runtime.LockOSThread()
+	runtime.LockOSThread()
 }
 
 var UseStrictCoreProfile = (runtime.GOOS == "darwin")
