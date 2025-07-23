@@ -1,0 +1,5 @@
+- figure out how to render cursor
+- handle scroll past edge of screen
+- implement a fuzzy search
+- read from stdin
+- write to stdout
