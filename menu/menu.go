@@ -1,39 +1,51 @@
 package menu
 
-import "strings"
+import (
+	"strings"
+)
 
 type Menu interface {
-	Search() []string
+	Search()
+	Results() []string
 	Add(c rune)
 	Remove()
 	Input() string
-	Current() int
+	CurrentIdx() int
+	Current() string
 	Left()
 	Right()
+
 	//Items() []string
 }
 
 func MenuFactory(items []string) Menu {
 	return &BasicMenu{
-		items: items,
-		input: make([]rune, 0),
+		items:  items,
+		input:  make([]rune, 0),
+		result: items,
 	}
 }
 
 type BasicMenu struct {
 	items   []string
+	result  []string
 	input   []rune
 	current int
 }
 
-func (s *BasicMenu) Search() []string {
+func (s *BasicMenu) Search() {
+	s.current = 0 // always reset current to zero when searching
 	results := []string{}
 	for _, elm := range s.items {
 		if strings.Contains(elm, string(s.input)) {
 			results = append(results, elm)
 		}
 	}
-	return results
+	s.result = results
+}
+
+func (s *BasicMenu) Results() []string {
+	return s.result
 }
 
 func (s *BasicMenu) Add(c rune) {
@@ -50,8 +62,12 @@ func (s *BasicMenu) Input() string {
 	return string(s.input)
 }
 
-func (s *BasicMenu) Current() int {
+func (s *BasicMenu) CurrentIdx() int {
 	return s.current
+}
+
+func (s *BasicMenu) Current() string {
+	return s.items[s.current]
 }
 
 func (s *BasicMenu) Left() {

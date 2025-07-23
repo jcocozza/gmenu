@@ -18,9 +18,6 @@ var useStrictCoreProfile = (runtime.GOOS == "darwin")
 type GUIRenderer struct {
 	w *glfw.Window
 
-	cursorX float32
-	cursorY float32
-
 	width  int
 	height int
 
@@ -81,7 +78,6 @@ func (r *GUIRenderer) Cleanup() error {
 func (r *GUIRenderer) renderInput(font *glfont.Font) error {
 	const inputSize int = 20
 	input := r.M.Input()
-
 	var inputDisplay string
 	if len(input) < inputSize {
 		inputDisplay = input + strings.Repeat(" ", inputSize-len(input))
@@ -92,34 +88,37 @@ func (r *GUIRenderer) renderInput(font *glfont.Font) error {
 		shift := len(input) - inputSize
 		inputDisplay = input[start+shift : end+shift]
 	}
-	//spacing := strings.Repeat(" ", minSpace)
-
 	font.SetColor(1.0, 1.0, 1.0, 1.0)
-	return font.Printf(0, float32(r.height)/2, 1.0, inputDisplay)
+	return font.Printf(0, float32(r.height)/2, 1.0, "%s", inputDisplay)
 }
 
 // TODO: this isn't right at all
 func (r *GUIRenderer) renderItems(font *glfont.Font) error {
-	items := r.M.Search()
-	maxLen := 100
-	//minLen := 50
+	startWidth := float32(r.width) / 2
+	height := float32(r.height) / 2
+	var scale float32 = 1
 
-	totalLen := 0
-
-	start := r.M.Current()
-	i := start
-	for j := start; j < len(items)-1; j++ {
-		totalLen += len(items[j]) + 1
-		if totalLen > maxLen {
-			break
+	items := r.M.Results()
+	curr := r.M.CurrentIdx()
+	unset := false
+	for i, item := range items {
+		if i == curr {
+			font.SetColor(255, 1.0, 1.0, 255)
+			unset = true
+			item = fmt.Sprintf("[%s]", item)
 		}
-		i++
+		err := font.Printf(startWidth, height, scale, "%s", item)
+		if err != nil {
+			return err
+		}
+
+		if unset {
+			font.SetColor(1.0, 1.0, 1.0, 1.0)
+			unset = false
+		}
+		startWidth += font.Width(scale, "%s", item) + font.Width(scale, " ")
 	}
-	displayedList := items[start:i]
-
-	displayStr := /*strings.Repeat(" ", maxLen-totalLen) +*/ strings.Join(displayedList, " ")
-
-	return font.Printf(21, float32(r.height)/2, 1.0, displayStr)
+	return nil
 }
 
 func (r *GUIRenderer) Render() error {
@@ -155,19 +154,20 @@ func (r *GUIRenderer) keyCallback(w *glfw.Window, key glfw.Key, scancode int, ac
 	case glfw.KeyEscape:
 		w.SetShouldClose(true)
 	case glfw.KeyEnter:
-		fmt.Println("enter is pressed")
+		fmt.Println(r.M.Current())
 	case glfw.KeyBackspace:
-		fmt.Println("backspace")
 		r.M.Remove()
+		r.M.Search()
 	case glfw.KeyUp, glfw.KeyRight:
-		fmt.Println("up or right")
+		r.M.Right()
 	case glfw.KeyDown, glfw.KeyLeft:
-		fmt.Println("down or left")
+		r.M.Left()
 	}
 }
 
 func (r *GUIRenderer) charCallback(w *glfw.Window, c rune) {
 	r.M.Add(c)
+	r.M.Search()
 }
 
 //func (r *GUIRenderer) drawCursor(x, y, height float32) {
