@@ -48,7 +48,7 @@ func (r *GUIRenderer) Init() error {
 	mode := monitor.GetVideoMode()
 
 	width := mode.Width
-	height := 40
+	height := 20
 
 	r.width = width
 	r.height = height
@@ -78,7 +78,8 @@ func (r *GUIRenderer) Cleanup() error {
 }
 
 func (r *GUIRenderer) Render() error {
-	font, err := glfont.LoadFontBytes(fnt.RobotoTTF, int32(10), r.width, r.height)
+	fontSize := int32(float32(r.height) * .6)
+	font, err := glfont.LoadFontBytes(fnt.RobotoTTF, fontSize, r.width, r.height)
 	if err != nil {
 		return err
 	}
