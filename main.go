@@ -5,26 +5,20 @@ import (
 
 	"gioui.org/app"
 	"gioui.org/io/key"
-	"gioui.org/io/system"
 	"gioui.org/layout"
 	"gioui.org/op"
+	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 )
 
 func main() {
 
-	//elts := []string{
-	//	"asdf",
-	//	"asdf1",
-	//	"asdf",
-	//	"asdf1",
-	//}
-
 	go func() {
 		w := new(app.Window)
+		w.Option(app.Decorated(false))
 		w.Option(app.Title("gmenu"))
-		//w.Option(app.Size(unit.Dp(100), unit.Dp(100)))
+		w.Option(app.Size(unit.Dp(1920), unit.Dp(25)))
 
 		if err := draw(w); err != nil {
 			panic(err)
@@ -40,8 +34,6 @@ func draw(w *app.Window) error {
 	var ed widget.Editor
 
 	init := false
-
-	w.Perform(system.ActionClose)
 
 	for {
 		switch e := w.Event().(type) {
