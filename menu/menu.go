@@ -67,7 +67,7 @@ func (s *BasicMenu) CurrentIdx() int {
 }
 
 func (s *BasicMenu) Current() string {
-	return s.items[s.current]
+	return s.result[s.current]
 }
 
 func (s *BasicMenu) Left() {
