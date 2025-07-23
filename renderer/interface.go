@@ -1,13 +1,16 @@
 package renderer
 
-import "github.com/jcocozza/gmenu/renderer/gui"
+import (
+	"github.com/jcocozza/gmenu/renderer/gui"
+	"github.com/jcocozza/gmenu/menu"
+)
 
 type Renderer interface{
 	Init() error
 	Cleanup() error
-	Render()
+	Render() error
 }
 
-func RendererFactory() Renderer {
-	return &gui.GUIRenderer{}
+func RendererFactory(m menu.Menu) Renderer {
+	return &gui.GUIRenderer{M: m}
 }
