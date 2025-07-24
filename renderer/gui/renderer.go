@@ -2,6 +2,7 @@ package gui
 
 import (
 	"fmt"
+	"os"
 	"runtime"
 	"strings"
 
@@ -198,7 +199,8 @@ func (r *GUIRenderer) keyCallback(w *glfw.Window, key glfw.Key, scancode int, ac
 	case glfw.KeyEscape:
 		w.SetShouldClose(true)
 	case glfw.KeyEnter:
-		fmt.Println(r.M.Current())
+		fmt.Fprintln(os.Stdout, r.M.Current())
+		w.SetShouldClose(true)
 	case glfw.KeyBackspace:
 		r.M.Remove()
 		r.M.Search()
