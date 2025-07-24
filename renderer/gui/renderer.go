@@ -215,21 +215,3 @@ func (r *GUIRenderer) charCallback(w *glfw.Window, c rune) {
 	r.M.Add(c)
 	r.M.Search()
 }
-
-//func (r *GUIRenderer) drawCursor(x, y, height float32) {
-//	gl.Begin(gl.LINES)
-//	gl.Color3f(1.0, 1.0, 1.0) // white
-//	gl.Vertex2f(x, y)
-//	gl.Vertex2f(x, y+height)
-//	gl.End()
-//}
-//
-//func (r *GUIRenderer) drawCursorBlock(x, y, width, height float32) {
-//	gl.Begin(gl.QUADS)
-//	gl.Color3f(1.0, 1.0, 1.0) // white
-//	gl.Vertex2f(x, y)
-//	gl.Vertex2f(x+width, y)
-//	gl.Vertex2f(x+width, y+height)
-//	gl.Vertex2f(x, y+height)
-//	gl.End()
-//}
