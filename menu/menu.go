@@ -76,7 +76,7 @@ func (s *BasicMenu) Left() {
 	}
 }
 func (s *BasicMenu) Right() {
-	if s.current < len(s.items)-1 {
+	if s.current < len(s.result)-1 {
 		s.current++
 	}
 }
