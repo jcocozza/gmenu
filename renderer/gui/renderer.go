@@ -15,6 +15,8 @@ import (
 
 var useStrictCoreProfile = (runtime.GOOS == "darwin")
 
+const scale float32 = 1
+
 type GUIRenderer struct {
 	w *glfw.Window
 
@@ -89,14 +91,55 @@ func (r *GUIRenderer) renderInput(font *glfont.Font) error {
 		inputDisplay = input[start+shift : end+shift]
 	}
 	font.SetColor(1.0, 1.0, 1.0, 1.0)
-	return font.Printf(0, float32(r.height)/2, 1.0, "%s", inputDisplay)
+	return font.Printf(0, float32(r.height)/2, scale, "%s", inputDisplay)
+}
+
+func (r *GUIRenderer) renderItms(font *glfont.Font) error {
+	maxWidth := float32(r.width) / 2 // give the "items" half the window
+	items := r.M.Results()
+	curr := r.M.CurrentIdx()
+	height := float32(r.height) / 2
+
+	var totalWidth float32 = 0.0
+	offset := float32(r.width) / 2 // start halfway across screen
+
+	spaceWidth := font.Width(scale, "    ")
+
+	for i, item := range items {
+		displayItem := item
+
+		isCurrent := i == curr
+
+		if isCurrent {
+			displayItem = fmt.Sprintf("[%s]", item) // cute highlight
+		}
+
+		itemWidth := font.Width(scale, "%s", displayItem)
+		if totalWidth+itemWidth > maxWidth {
+			break
+		}
+
+		if isCurrent {
+			font.SetColor(255, 1.0, 1.0, 255)
+		}
+
+		if err := font.Printf(offset+totalWidth, height, scale, "%s", displayItem); err != nil {
+			return err
+		}
+
+		if isCurrent {
+			font.SetColor(1.0, 1.0, 1.0, 1.0)
+		}
+		totalWidth += itemWidth + spaceWidth
+
+	}
+	return nil
 }
 
 // TODO: this isn't right at all
 func (r *GUIRenderer) renderItems(font *glfont.Font) error {
 	startWidth := float32(r.width) / 2
 	height := float32(r.height) / 2
-	var scale float32 = 1
 
 	items := r.M.Results()
 	curr := r.M.CurrentIdx()
@@ -128,6 +171,7 @@ func (r *GUIRenderer) Render() error {
 		return err
 	}
 	for !r.w.ShouldClose() {
+		glfw.PollEvents()
 		// background color
 		gl.ClearColor(0.1, 0.1, 0.1, 1.0)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -135,13 +179,12 @@ func (r *GUIRenderer) Render() error {
 		if err != nil {
 			return err
 		}
-		err = r.renderItems(font)
+		err = r.renderItms(font)
 		if err != nil {
 			return err
 		}
 
 		r.w.SwapBuffers()
-		glfw.PollEvents()
 	}
 	return nil
 }
