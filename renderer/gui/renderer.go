@@ -57,7 +57,6 @@ func (r *GUIRenderer) Init() error {
 	if err != nil {
 		return err
 	}
-	window.MakeContextCurrent()
 
 	if err := gl.Init(); err != nil {
 		return err
@@ -65,6 +64,9 @@ func (r *GUIRenderer) Init() error {
 
 	window.SetPos(0, 0)
 	window.MakeContextCurrent()
+	window.Show()
+	window.Focus()
+	window.RequestAttention()
 
 	window.SetCharCallback(r.charCallback)
 	window.SetKeyCallback(r.keyCallback)
@@ -94,72 +96,71 @@ func (r *GUIRenderer) renderInput(font *glfont.Font) error {
 	return font.Printf(0, float32(r.height)/2, scale, "%s", inputDisplay)
 }
 
-func (r *GUIRenderer) renderItms(font *glfont.Font) error {
-	maxWidth := float32(r.width) / 2 // give the "items" half the window
+type chunk struct {
+	start int
+	end   int
+}
+
+func (c chunk) String() string {
+	return fmt.Sprintf("{start: %d end: %d}", c.start, c.end)
+}
+
+func (r *GUIRenderer) rItems(font *glfont.Font) error {
+	maxWidth := (float32(r.width) / 2 ) - 4 * font.Width(scale, "    ")// give the "items" half the window
 	items := r.M.Results()
 	curr := r.M.CurrentIdx()
-	height := float32(r.height) / 2
+	displayChunks := []chunk{}
 
-	var totalWidth float32 = 0.0
-	offset := float32(r.width) / 2 // start halfway across screen
-
+	start := 0
+	end := 0
+	currentChunkIdx := 0
 	spaceWidth := font.Width(scale, "    ")
 
+	var chunkWidth float32 = 0.0
 	for i, item := range items {
 		displayItem := item
-
 		isCurrent := i == curr
-
 		if isCurrent {
 			displayItem = fmt.Sprintf("[%s]", item) // cute highlight
 		}
-
-		itemWidth := font.Width(scale, "%s", displayItem)
-		if totalWidth+itemWidth > maxWidth {
-			break
+		itemWidth := font.Width(scale, "%s", displayItem) + spaceWidth
+		if chunkWidth+itemWidth >= maxWidth { // we have gone too far
+			displayChunks = append(displayChunks, chunk{start: start, end: i})
+			if curr >= start && curr <= i {
+				currentChunkIdx = len(displayChunks) - 1
+			}
+			start = i
+			end = i
+			chunkWidth = itemWidth
+		} else {
+			chunkWidth += itemWidth
 		}
-
-		if isCurrent {
-			font.SetColor(255, 1.0, 1.0, 255)
-		}
-
-		if err := font.Printf(offset+totalWidth, height, scale, "%s", displayItem); err != nil {
-			return err
-		}
-
-		if isCurrent {
-			font.SetColor(1.0, 1.0, 1.0, 1.0)
-		}
-		totalWidth += itemWidth + spaceWidth
-
 	}
-	return nil
-}
+	// add the last chunk
+	displayChunks = append(displayChunks, chunk{start: end, end: len(items)})
 
-// TODO: this isn't right at all
-func (r *GUIRenderer) renderItems(font *glfont.Font) error {
-	startWidth := float32(r.width) / 2
+	// actual render
+	offset := float32(r.width) / 2 // start halfway across the screen
 	height := float32(r.height) / 2
-
-	items := r.M.Results()
-	curr := r.M.CurrentIdx()
-	unset := false
-	for i, item := range items {
-		if i == curr {
+	var displayWidth float32 = 0.0
+	c := displayChunks[currentChunkIdx]
+	for i, elm := range items[c.start:c.end] {
+		isCurrent := c.start+i == curr
+		displayItem := elm
+		if isCurrent {
 			font.SetColor(255, 1.0, 1.0, 255)
-			unset = true
-			item = fmt.Sprintf("[%s]", item)
 		}
-		err := font.Printf(startWidth, height, scale, "%s", item)
-		if err != nil {
+		if isCurrent {
+			displayItem = fmt.Sprintf("[%s]", elm) // cute highlight
+		}
+		if err := font.Printf(offset+displayWidth, height, scale, "%s", displayItem); err != nil {
 			return err
 		}
-
-		if unset {
+		if isCurrent {
 			font.SetColor(1.0, 1.0, 1.0, 1.0)
-			unset = false
 		}
-		startWidth += font.Width(scale, "%s", item) + font.Width(scale, " ")
+		itemWidth := font.Width(scale, "%s", displayItem)
+		displayWidth += itemWidth + spaceWidth
 	}
 	return nil
 }
@@ -179,7 +180,7 @@ func (r *GUIRenderer) Render() error {
 		if err != nil {
 			return err
 		}
-		err = r.renderItms(font)
+		err = r.rItems(font)
 		if err != nil {
 			return err
 		}
