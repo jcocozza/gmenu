@@ -59,10 +59,6 @@ func (r *GUIRenderer) Init() error {
 		return err
 	}
 
-	if err := gl.Init(); err != nil {
-		return err
-	}
-
 	window.SetPos(0, 0)
 	window.MakeContextCurrent()
 	window.Show()
@@ -72,6 +68,11 @@ func (r *GUIRenderer) Init() error {
 	window.SetCharCallback(r.charCallback)
 	window.SetKeyCallback(r.keyCallback)
 	r.w = window
+
+	if err := gl.Init(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -107,7 +108,7 @@ func (c chunk) String() string {
 }
 
 func (r *GUIRenderer) rItems(font *glfont.Font) error {
-	maxWidth := (float32(r.width) / 2 ) - 4 * font.Width(scale, "    ")// give the "items" half the window
+	maxWidth := (float32(r.width) / 2) - 4*font.Width(scale, "    ") // give the "items" half the window
 	items := r.M.Results()
 	curr := r.M.CurrentIdx()
 	displayChunks := []chunk{}
