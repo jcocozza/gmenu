@@ -41,12 +41,12 @@ jobs:
         run: |
           export GOOS=${{ matrix.goos }}
           export GOARCH=${{ matrix.goarch }}
+          export CGO_ENABLED=1
           BIN_NAME=gmenu-${GOOS}-${GOARCH}${{ matrix.ext }}
 
           if [ "$GOOS" =  "windows" ]; then
             export  CC=x86_64-w64-mingw32-gcc
           fi
-
           go build -v -o "$BIN_NAME" -ldflags "-X 'main.Version=${VERSION}' -X main.Commit=${COMMIT} -X main.Date=${DATE}"
 
       - name: zip
