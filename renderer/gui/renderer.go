@@ -69,6 +69,8 @@ func (r *GUIRenderer) Init() error {
 	window.SetKeyCallback(r.keyCallback)
 	r.w = window
 
+	setWindowCollectionBehavior(window)
+
 	if err := gl.Init(); err != nil {
 		return err
 	}
