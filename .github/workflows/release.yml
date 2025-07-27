@@ -37,7 +37,7 @@ jobs:
       - name: Build ${{ matrix.goos }}/${{ matrix.goarch }}
         run: |
           export GOOS=${{ matrix.goos }}
-          export GOARCH=${{ matrix.goarch}}
+          export GOARCH=${{ matrix.goarch }}
           BIN_NAME=gmenu-${GOOS}-${GOARCH}${{ matrix.ext }}
 
           if [ "$GOOS" =  "windows" ]; then
@@ -58,4 +58,3 @@ jobs:
           files: gmenu-*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
