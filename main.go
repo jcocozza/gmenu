@@ -2,10 +2,19 @@ package main
 
 import (
 	"bufio"
+	"flag"
+	"fmt"
 	"os"
 
 	"github.com/jcocozza/gmenu/menu"
 	"github.com/jcocozza/gmenu/renderer"
+)
+
+// these are set on build
+var (
+	Version = "dev"
+	Commit  = "none"
+	Date    = "unknown"
 )
 
 func readStdin() ([]string, error) {
@@ -20,7 +29,27 @@ func readStdin() ([]string, error) {
 	return results, nil
 }
 
+func usage() {
+	fmt.Printf("usage: %s [options]\n", os.Args[0])
+	fmt.Println("Options:")
+	fmt.Println("-v    show version")
+	fmt.Println("-h    show this help message")
+
+}
+
 func main() {
+	flag.Usage = usage
+	version := flag.Bool("v", false, "print version and exit")
+	flag.Parse()
+
+	if *version {
+		_, err := fmt.Fprintf(os.Stdout, "%s: built on %s, commit: %s\n", Version, Date, Commit)
+		if err != nil {
+			os.Exit(1)
+		}
+		os.Exit(0)
+	}
+
 	elms, err := readStdin()
 	if err != nil {
 		panic(err)
