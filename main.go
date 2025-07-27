@@ -31,7 +31,10 @@ func readStdin() ([]string, error) {
 
 func usage() {
 	fmt.Printf("usage: %s [options]\n", os.Args[0])
-	fmt.Println("Options:")
+	fmt.Println("")
+	fmt.Println("read from stdin and display the results in a selectable list")
+	fmt.Println("")
+	fmt.Println("options:")
 	fmt.Println("-v    show version")
 	fmt.Println("-h    show this help message")
 
