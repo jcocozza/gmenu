@@ -1,6 +1,6 @@
 #import <Cocoa/Cocoa.h>
 
-void setWindowCollectionBehavior(void *window) {
+void setWindowBehavior(void *window) {
   NSWindow *nsWindow = (__bridge NSWindow *)window;
   [NSApp setActivationPolicy:NSApplicationActivationPolicyAccessory];
 
