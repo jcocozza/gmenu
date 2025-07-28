@@ -1,10 +1,10 @@
 package menu
 
-
+// must call ExecSearch to populuate the results
 type GMenu struct {
-	input []rune
-	currentResults []string
-	selected int
+	input          []rune
+	currentResults []Item
+	selected       int
 
 	s Searcher
 }
@@ -22,7 +22,7 @@ func (g *GMenu) ExecSearch() {
 	g.currentResults = g.s.Search(string(g.input))
 }
 
-func (g *GMenu) Results() []string {
+func (g *GMenu) Results() []Item {
 	return g.currentResults
 }
 
