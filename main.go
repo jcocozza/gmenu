@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/jcocozza/gmenu/menu"
 	"github.com/jcocozza/gmenu/renderer"
 )
@@ -17,11 +18,11 @@ var (
 	Date    = "unknown"
 )
 
-func readStdin() ([]string, error) {
-	var results []string
+func readStdin() ([]menu.Item, error) {
+	var results []menu.Item
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
-		results = append(results, scanner.Text())
+		results = append(results, menu.BasicItem(scanner.Text()))
 	}
 	if err := scanner.Err(); err != nil {
 		return nil, err
@@ -57,14 +58,36 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	m := menu.MenuFactory(elms)
-	r := renderer.RendererFactory(m)
+	m := menu.NewGmenu(elms)
+	r := renderer.RendererFactory()
 	if err := r.Init(); err != nil {
 		panic(err)
 	}
 	defer r.Cleanup()
-	err = r.Render()
-	if err != nil {
+
+	m.ExecSearch()
+	// init render
+	if err := r.RenderFrame(m); err != nil {
 		panic(err)
+	}
+	for !r.Done() {
+		glfw.PollEvents()
+		act := r.Action()
+		//  we don't need to rerender if no action has happened
+		if act == nil {
+			continue
+		}
+		switch act.(type) {
+		case menu.ActionSelect:
+			r.ClearAction()
+			item := m.SelectedItem()
+			fmt.Println(item.Value())
+		default:
+			act.Apply(m)
+			r.ClearAction()
+		}
+		if err := r.RenderFrame(m); err != nil {
+			panic(err)
+		}
 	}
 }

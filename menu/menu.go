@@ -9,12 +9,22 @@ type GMenu struct {
 	s Searcher
 }
 
+func NewGmenu(items []Item) *GMenu {
+	return &GMenu{
+		s: SearcherFactory(items),
+	}
+}
+
 func (g *GMenu) AddChar(c rune) {
 	g.input = append(g.input, c)
 }
 
-func (g *GMenu) RemoveChar(c rune) {
+func (g *GMenu) RemoveChar() {
 	g.input = g.input[:len(g.input)-1]
+}
+
+func (g *GMenu) Input() string {
+	return string(g.input)
 }
 
 func (g *GMenu) ExecSearch() {
@@ -40,4 +50,8 @@ func (g *GMenu) Right() {
 
 func (g *GMenu) Selected() int {
 	return g.selected
+}
+
+func (g *GMenu) SelectedItem() Item {
+	return g.currentResults[g.selected]
 }

@@ -8,6 +8,12 @@ type Searcher interface {
 	Search(input string) []Item
 }
 
+func SearcherFactory(items []Item) Searcher {
+	return &ListSearcher{
+		items: items,
+	}
+}
+
 type ListSearcher struct {
 	items []Item
 }
@@ -18,7 +24,7 @@ func (l *ListSearcher) Search(input string) []Item {
 	}
 	results := []Item{}
 	for _, elm := range l.items {
-		if strings.Contains(elm.Name(), input) {
+		if strings.Contains(elm.Display(), input) {
 			results = append(results, elm)
 		}
 	}

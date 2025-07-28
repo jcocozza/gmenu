@@ -2,29 +2,30 @@ package gui
 
 import (
 	"fmt"
-	"os"
 	"runtime"
-	"strings"
 
 	"github.com/go-gl/gl/all-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
+	"github.com/jcocozza/gmenu/menu"
 	"github.com/nullboundary/glfont"
 
 	fnt "github.com/jcocozza/gmenu/font"
-	"github.com/jcocozza/gmenu/menu"
 )
 
 var useStrictCoreProfile = (runtime.GOOS == "darwin")
 
-const scale float32 = 1
-
+// MUST call Init()
 type GUIRenderer struct {
 	w *glfw.Window
 
-	width  int
-	height int
+	scale             float32
+	width             int
+	height            int
+	searchResultRatio float32
 
-	M menu.Menu
+	f *glfont.Font
+
+	currAction menu.Action
 }
 
 func (r *GUIRenderer) Init() error {
@@ -53,6 +54,8 @@ func (r *GUIRenderer) Init() error {
 
 	r.width = width
 	r.height = height
+	r.scale = 1.0
+	r.searchResultRatio = 0.6
 
 	window, err := glfw.CreateWindow(width, height, "gmenu", nil, nil)
 	if err != nil {
@@ -75,6 +78,13 @@ func (r *GUIRenderer) Init() error {
 		return err
 	}
 
+	fontSize := int32(float32(r.height) * .6)
+	font, err := glfont.LoadFontBytes(fnt.RobotoTTF, fontSize, r.width, r.height)
+	if err != nil {
+		return err
+	}
+	r.f = font
+
 	return nil
 }
 
@@ -83,114 +93,58 @@ func (r *GUIRenderer) Cleanup() error {
 	return nil
 }
 
-func (r *GUIRenderer) renderInput(font *glfont.Font) error {
-	const inputSize int = 20
-	input := r.M.Input()
+func (r *GUIRenderer) Done() bool {
+	return r.w.ShouldClose()
+}
+
+func (r *GUIRenderer) RenderFrame(gm *menu.GMenu) error {
+	gl.ClearColor(0.1, 0.1, 0.1, 1.0)
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
+	// this renders the input
+	input := gm.Input()
 	var inputDisplay string
-	if len(input) < inputSize {
-		inputDisplay = input + strings.Repeat(" ", inputSize-len(input))
+	if len(input) < int(r.inputWidth()) {
+		inputDisplay = input
 	} else {
-		// this gives us a "scroll" when typing long searches
 		start := 0
-		end := inputSize
-		shift := len(input) - inputSize
+		end := int(r.inputWidth())
+		shift := len(input) - int(r.inputWidth())
 		inputDisplay = input[start+shift : end+shift]
 	}
-	font.SetColor(1.0, 1.0, 1.0, 1.0)
-	return font.Printf(0, float32(r.height)/2, scale, "%s", inputDisplay)
-}
-
-type chunk struct {
-	start int
-	end   int
-}
-
-func (c chunk) String() string {
-	return fmt.Sprintf("{start: %d end: %d}", c.start, c.end)
-}
-
-func (r *GUIRenderer) rItems(font *glfont.Font) error {
-	maxWidth := (float32(r.width) / 2) - 4*font.Width(scale, "    ") // give the "items" half the window
-	items := r.M.Results()
-	curr := r.M.CurrentIdx()
-	displayChunks := []chunk{}
-
-	start := 0
-	end := 0
-	currentChunkIdx := 0
-	spaceWidth := font.Width(scale, "    ")
-
-	var chunkWidth float32 = 0.0
-	for i, item := range items {
-		displayItem := item
-		isCurrent := i == curr
-		if isCurrent {
-			displayItem = fmt.Sprintf("[%s]", item) // cute highlight
-		}
-		itemWidth := font.Width(scale, "%s", displayItem) + spaceWidth
-		if chunkWidth+itemWidth >= maxWidth { // we have gone too far
-			displayChunks = append(displayChunks, chunk{start: start, end: i})
-			if curr >= start && curr <= i {
-				currentChunkIdx = len(displayChunks) - 1
-			}
-			start = i
-			end = i
-			chunkWidth = itemWidth
-		} else {
-			chunkWidth += itemWidth
-		}
-	}
-	// add the last chunk
-	displayChunks = append(displayChunks, chunk{start: end, end: len(items)})
-
-	// actual render
-	offset := float32(r.width) / 2 // start halfway across the screen
-	height := float32(r.height) / 2
-	var displayWidth float32 = 0.0
-	c := displayChunks[currentChunkIdx]
-	for i, elm := range items[c.start:c.end] {
-		isCurrent := c.start+i == curr
-		displayItem := elm
-		if isCurrent {
-			font.SetColor(255, 1.0, 1.0, 255)
-		}
-		if isCurrent {
-			displayItem = fmt.Sprintf("[%s]", elm) // cute highlight
-		}
-		if err := font.Printf(offset+displayWidth, height, scale, "%s", displayItem); err != nil {
-			return err
-		}
-		if isCurrent {
-			font.SetColor(1.0, 1.0, 1.0, 1.0)
-		}
-		itemWidth := font.Width(scale, "%s", displayItem)
-		displayWidth += itemWidth + spaceWidth
-	}
-	return nil
-}
-
-func (r *GUIRenderer) Render() error {
-	fontSize := int32(float32(r.height) * .6)
-	font, err := glfont.LoadFontBytes(fnt.RobotoTTF, fontSize, r.width, r.height)
-	if err != nil {
+	r.f.SetColor(1.0, 1.0, 1.0, 1.0)
+	if err := r.f.Printf(0, float32(r.height)/2, r.scale, "%s", inputDisplay); err != nil {
 		return err
 	}
-	for !r.w.ShouldClose() {
-		glfw.PollEvents()
-		// background color
-		gl.ClearColor(0.1, 0.1, 0.1, 1.0)
-		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-		err := r.renderInput(font)
-		if err != nil {
-			return err
-		}
-		err = r.rItems(font)
-		if err != nil {
-			return err
-		}
 
-		r.w.SwapBuffers()
+	// this renders the results
+	items := gm.Results()
+	selected := gm.Selected()
+
+	chunks, chunkIdx := r.chunkify(items, selected)
+	offset := float32(r.width) - r.resultsWidth()
+	height := float32(r.height) / 2
+
+	var displayWidth float32
+	c := chunks[chunkIdx]
+	for i, elm := range items[c.start : c.end+1] {
+		isCurrent := c.start+i == selected
+		displayItem := elm.Display()
+		if isCurrent {
+			r.f.SetColor(255, 1.0, 1.0, 255)
+			displayItem = fmt.Sprintf("[%s]", elm)
+		}
+		if err := r.f.Printf(offset+displayWidth, height, r.scale, "%s", displayItem); err != nil {
+			return err
+		}
+		if isCurrent {
+			r.f.SetColor(1.0, 1.0, 1.0, 1.0)
+		}
+		itemWidth := r.f.Width(r.scale, "%s", displayItem)
+		displayWidth += itemWidth + r.spaceWidth()
 	}
+
+	r.w.SwapBuffers()
 	return nil
 }
 
@@ -202,19 +156,20 @@ func (r *GUIRenderer) keyCallback(w *glfw.Window, key glfw.Key, scancode int, ac
 	case glfw.KeyEscape:
 		w.SetShouldClose(true)
 	case glfw.KeyEnter:
-		fmt.Fprintln(os.Stdout, r.M.Current())
+		r.currAction = menu.ActionSelect{}
 		w.SetShouldClose(true)
 	case glfw.KeyBackspace:
-		r.M.Remove()
-		r.M.Search()
+		r.currAction = menu.ActionRemoveChar{}
 	case glfw.KeyUp, glfw.KeyRight:
-		r.M.Right()
+		r.currAction = menu.ActionRight{}
 	case glfw.KeyDown, glfw.KeyLeft:
-		r.M.Left()
+		r.currAction = menu.ActionLeft{}
 	}
 }
 
 func (r *GUIRenderer) charCallback(w *glfw.Window, c rune) {
-	r.M.Add(c)
-	r.M.Search()
+	r.currAction = menu.ActionAddChar{C: c}
 }
+
+func (r *GUIRenderer) Action() menu.Action { return r.currAction }
+func (r *GUIRenderer) ClearAction()        { r.currAction = nil }

@@ -14,5 +14,4 @@ import "github.com/go-gl/glfw/v3.3/glfw"
 func setWindowBehavior(window *glfw.Window) {
 	windowPtr := window.GetCocoaWindow()
 	C.setWindowBehavior(windowPtr)
-
 }
