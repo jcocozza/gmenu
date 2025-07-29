@@ -136,7 +136,7 @@ func (r *GUIRenderer) RenderFrame(gm *menu.GMenu) error {
 		displayItem := elm.Display()
 		if isCurrent {
 			r.f.SetColor(255, 1.0, 1.0, 255)
-			displayItem = fmt.Sprintf("[%s]", elm)
+			displayItem = fmt.Sprintf("[%s]", displayItem)
 		}
 		if err := r.f.Printf(offset+displayWidth, height, r.scale, "%s", displayItem); err != nil {
 			return err

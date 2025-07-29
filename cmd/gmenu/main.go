@@ -39,8 +39,8 @@ func main() {
 	flag.BoolVar(&version, "version", false, "print version and exit")
 
 	var alias bool
-	flag.BoolVar(&version, "a", false, "enable alias parsing mode")
-	flag.BoolVar(&version, "alias", false, "enable alias parsing mode")
+	flag.BoolVar(&alias, "a", false, "enable alias parsing mode")
+	flag.BoolVar(&alias, "alias", false, "enable alias parsing mode")
 
 	flag.Parse()
 
