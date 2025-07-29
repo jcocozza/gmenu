@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 
 	"github.com/jcocozza/gmenu/internal/app"
 )
@@ -32,6 +33,8 @@ func printVersion() {
 }
 
 func main() {
+	// this *NEEDS* to be in the main method, otherwise things break
+	runtime.LockOSThread()
 	flag.Usage = usage
 
 	var version bool

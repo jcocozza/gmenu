@@ -29,7 +29,6 @@ type GUIRenderer struct {
 }
 
 func (r *GUIRenderer) Init() error {
-	runtime.LockOSThread()
 	if err := glfw.Init(); err != nil {
 		return err
 	}
