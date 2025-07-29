@@ -40,21 +40,29 @@ jobs:
           echo "COMMIT=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
           echo "DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_ENV"
 
+      - name: Set file extension
+        run: |
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            echo "EXT=.exe" >> "$GITHUB_ENV"
+          else
+            echo "EXT=" >> "$GITHUB_ENV"
+          fi
+
       - name: Build ${{ matrix.goos }}/${{ matrix.goarch }}
         run: |
           export GOOS=${{ matrix.goos }}
           export GOARCH=${{ matrix.goarch }}
           export CGO_ENABLED=1
-          BIN_NAME=gmenu-${GOOS}-${GOARCH}${{ matrix.ext }}
+          BIN_NAME=gmenu-${GOOS}-${GOARCH}${EXT}
 
           if [ "$GOOS" =  "windows" ]; then
             export  CC=x86_64-w64-mingw32-gcc
           fi
-          go build -v -o "$BIN_NAME" -ldflags "-X 'main.Version=${VERSION}' -X main.Commit=${COMMIT} -X main.Date=${DATE}"
+          go build -v -o "$BIN_NAME" -ldflags "-X 'main.Version=${VERSION}' -X main.Commit=${COMMIT} -X main.Date=${DATE}" ./cmd/gmenu
 
       - name: zip
         run: |
-          BIN_NAME=gmenu-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
+          BIN_NAME=gmenu-${{ matrix.goos }}-${{ matrix.goarch }}${EXT}
           zip "${BIN_NAME}.zip" "${BIN_NAME}"
 
 
