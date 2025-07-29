@@ -8,6 +8,7 @@ import (
 	"runtime"
 
 	"github.com/jcocozza/gmenu/internal/app"
+	"github.com/jcocozza/gmenu/internal/util"
 )
 
 var (
@@ -68,10 +69,20 @@ func main() {
 
 	cfg := app.AppConfig{Alias: alias}
 
+	p := util.NewProfiler()
+	if err := p.Init("gmenu"); err != nil {
+		fmt.Fprintf(os.Stdout, "error: startup: %v", err)
+		os.Exit(1)
+	}
+	if err := p.Start(); err != nil {
+		fmt.Fprintf(os.Stdout, "error: startup: %v", err)
+		os.Exit(1)
+	}
+
 	a, err := app.NewGMenuApp(cfg, in)
 	if err != nil {
 		fmt.Fprintf(os.Stdout, "error: startup: %v", err)
 		os.Exit(1)
 	}
-	a.Render()
+	a.Render(p)
 }

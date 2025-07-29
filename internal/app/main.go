@@ -7,6 +7,7 @@ import (
 
 	"github.com/jcocozza/gmenu/internal/menu"
 	"github.com/jcocozza/gmenu/internal/renderer"
+	"github.com/jcocozza/gmenu/internal/util"
 )
 
 type AppConfig struct {
@@ -50,7 +51,7 @@ func (a *GMenuApp) readAndParseItems(r io.Reader) ([]menu.Item, error) {
 	return items, scanner.Err()
 }
 
-func (a *GMenuApp) Render() {
+func (a *GMenuApp) Render(p util.Profiler) {
 	if err := a.r.Init(); err != nil {
 		panic(err)
 	}
@@ -60,6 +61,8 @@ func (a *GMenuApp) Render() {
 	if err := a.r.RenderFrame(a.m); err != nil {
 		panic(err)
 	}
+	err := p.Stop()
+	if err != nil { panic(err) }
 	for !a.r.Done() {
 		a.r.PollEvents()
 		act := a.r.Action()
