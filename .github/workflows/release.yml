@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runs-on }}
 
     strategy:
       matrix:
@@ -23,7 +23,7 @@ jobs:
             runs-on: ubuntu-latest
           - goos: darwin
             goarch: amd64
-            runs-on: macos-latest
+            runs-on: macos-14
           - goos: darwin
             goarch: arm64
             runs-on: macos-14
