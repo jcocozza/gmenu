@@ -20,6 +20,8 @@ type Renderer interface{
 	Action() menu.Action
 	// clear the action after it has been processed
 	ClearAction()
+	// tell renderer that next iteration should close
+	MarkClose()
 }
 
 func RendererFactory() Renderer {

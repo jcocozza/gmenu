@@ -52,6 +52,10 @@ func (g *GMenu) Selected() int {
 	return g.selected
 }
 
+// return nil if there are no results
 func (g *GMenu) SelectedItem() Item {
+	if len(g.currentResults) == 0 {
+		return nil
+	}
 	return g.currentResults[g.selected]
 }

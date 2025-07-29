@@ -71,7 +71,10 @@ func (a *GMenuApp) Render() {
 		case menu.ActionSelect:
 			a.r.ClearAction()
 			item := a.m.SelectedItem()
-			fmt.Println(item.Value())
+			if item != nil { // do nothing if we don't have any results
+				fmt.Println(item.Value())
+				a.r.MarkClose()
+			}
 		default:
 			act.Apply(a.m)
 			a.r.ClearAction()

@@ -161,7 +161,6 @@ func (r *GUIRenderer) keyCallback(w *glfw.Window, key glfw.Key, scancode int, ac
 		w.SetShouldClose(true)
 	case glfw.KeyEnter:
 		r.currAction = menu.ActionSelect{}
-		w.SetShouldClose(true)
 	case glfw.KeyBackspace:
 		r.currAction = menu.ActionRemoveChar{}
 	case glfw.KeyUp, glfw.KeyRight:
@@ -177,3 +176,4 @@ func (r *GUIRenderer) charCallback(w *glfw.Window, c rune) {
 
 func (r *GUIRenderer) Action() menu.Action { return r.currAction }
 func (r *GUIRenderer) ClearAction()        { r.currAction = nil }
+func (r *GUIRenderer) MarkClose()          { r.w.SetShouldClose(true) }
