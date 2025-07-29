@@ -32,6 +32,7 @@ func (r *GUIRenderer) spaceWidth() float32 {
 
 
 func (r *GUIRenderer) chunkify(items []menu.Item, currItemIdx int) ([]chunk, int) {
+	spaceWidth := r.spaceWidth()
 	maxWidth := r.resultsWidth()
 	var chunkWidth float32
 
@@ -45,7 +46,7 @@ func (r *GUIRenderer) chunkify(items []menu.Item, currItemIdx int) ([]chunk, int
 			displayItem = fmt.Sprintf("[%s]", item.Display())
 		}
 
-		itemWidth := r.f.Width(r.scale, "%s", displayItem) + r.spaceWidth()
+		itemWidth := r.f.Width(r.scale, "%s", displayItem) + spaceWidth
 
 		if chunkWidth+itemWidth >= maxWidth {
 			chunks = append(chunks, chunk{start: start, end: i-1})

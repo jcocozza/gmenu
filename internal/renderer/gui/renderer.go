@@ -33,12 +33,13 @@ func (r *GUIRenderer) Init() error {
 		return err
 	}
 
-	glfw.WindowHint(glfw.ContextVersionMajor, 4)
-	glfw.WindowHint(glfw.ContextVersionMinor, 1)
+	glfw.WindowHint(glfw.ContextVersionMajor, 3)
+	glfw.WindowHint(glfw.ContextVersionMinor, 2)
 
 	glfw.WindowHint(glfw.Decorated, glfw.False)
 	glfw.WindowHint(glfw.Resizable, glfw.False)
 	glfw.WindowHint(glfw.Floating, glfw.True)
+
 
 	if useStrictCoreProfile {
 		glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
@@ -101,6 +102,7 @@ func (r *GUIRenderer) PollEvents() {
 }
 
 func (r *GUIRenderer) RenderFrame(gm *menu.GMenu) error {
+	spaceWidth := r.spaceWidth()
 	gl.ClearColor(0.1, 0.1, 0.1, 1.0)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
@@ -144,7 +146,7 @@ func (r *GUIRenderer) RenderFrame(gm *menu.GMenu) error {
 			r.f.SetColor(1.0, 1.0, 1.0, 1.0)
 		}
 		itemWidth := r.f.Width(r.scale, "%s", displayItem)
-		displayWidth += itemWidth + r.spaceWidth()
+		displayWidth += itemWidth + spaceWidth
 	}
 
 	r.w.SwapBuffers()
