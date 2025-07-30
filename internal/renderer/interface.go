@@ -2,10 +2,11 @@ package renderer
 
 import (
 	"github.com/jcocozza/gmenu/internal/menu"
-	"github.com/jcocozza/gmenu/internal/renderer/gui"
+	//"github.com/jcocozza/gmenu/internal/renderer/gui"
+	"github.com/jcocozza/gmenu/internal/renderer/guisdl"
 )
 
-type Renderer interface{
+type Renderer interface {
 	// to be called before any attempt at rendering is made
 	Init() error
 	// defered to cleanup after finished rendering
@@ -25,5 +26,6 @@ type Renderer interface{
 }
 
 func RendererFactory() Renderer {
-	return &gui.GUIRenderer{}
+	//return &gui.GUIRenderer{}
+	return &guisdl.SDLRenderer{}
 }

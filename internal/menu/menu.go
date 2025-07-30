@@ -20,6 +20,7 @@ func (g *GMenu) AddChar(c rune) {
 }
 
 func (g *GMenu) RemoveChar() {
+	if len(g.input) == 0 { return }
 	g.input = g.input[:len(g.input)-1]
 }
 
