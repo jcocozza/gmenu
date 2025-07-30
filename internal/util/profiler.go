@@ -3,7 +3,9 @@ package util
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"runtime/pprof"
+	"runtime/trace"
 	"time"
 )
 
@@ -24,30 +26,65 @@ func NewProfiler() Profiler {
 }
 
 type PProfProfiler struct {
-	f     *os.File
+	cpu   *os.File
+	block *os.File
+	trace *os.File
 	start time.Time
 	end   time.Time
 }
 
 func (p *PProfProfiler) Init(name string) error {
+	runtime.SetBlockProfileRate(1)
 	n := fmt.Sprintf("%s.cpu.pprof", name)
 	f, err := os.Create(n)
 	if err != nil {
 		return err
 	}
-	p.f = f
+	p.cpu = f
+
+	bn := fmt.Sprintf("%s.block.prof", name)
+	bf, err := os.Create(bn)
+	if err != nil {
+		return err
+	}
+	p.block = bf
+
+	tn := fmt.Sprintf("%s.trace.out", name)
+	tf, err := os.Create(tn)
+	if err != nil {
+		return err
+	}
+	p.trace = tf
+
 	return nil
 }
 
 func (p *PProfProfiler) Start() error {
 	p.start = time.Now()
-	return pprof.StartCPUProfile(p.f)
+	if err := trace.Start(p.trace); err != nil {
+		return err
+	}
+	return pprof.StartCPUProfile(p.cpu)
 }
 
 func (p *PProfProfiler) Stop() error {
+	err := pprof.Lookup("block").WriteTo(p.block, 0)
+	if err != nil {
+		return err
+	}
 	p.end = time.Now()
+	trace.Stop()
 	pprof.StopCPUProfile()
-	return p.f.Close()
+	err = p.cpu.Close()
+	if err != nil {
+		return err
+	}
+	err = p.trace.Close()
+	if err != nil {
+		return err
+	}
+
+	return p.block.Close()
 }
 
 func (p *PProfProfiler) Duration() time.Duration {

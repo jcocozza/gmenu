@@ -30,6 +30,25 @@ func (r *GUIRenderer) spaceWidth() float32 {
 	return r.f.Width(r.scale, "    ")
 }
 
+func (r *GUIRenderer) firstChunk(items []menu.Item) chunk {
+	spaceWidth := r.spaceWidth()
+	maxWidth := r.resultsWidth()
+	var chunkWidth float32
+
+	var start int
+	for i, item := range items {
+		displayItem := item.Display()
+		if i == 0 {
+			displayItem = fmt.Sprintf("[%s]", item.Display())
+		}
+		itemWidth := r.f.Width(r.scale, "%s", displayItem) + spaceWidth
+		if chunkWidth+itemWidth >= maxWidth {
+			return chunk{start: start, end: i-1}
+		}
+		chunkWidth += itemWidth
+	}
+	panic("missed the train!")
+}
 
 func (r *GUIRenderer) chunkify(items []menu.Item, currItemIdx int) ([]chunk, int) {
 	spaceWidth := r.spaceWidth()
@@ -49,7 +68,7 @@ func (r *GUIRenderer) chunkify(items []menu.Item, currItemIdx int) ([]chunk, int
 		itemWidth := r.f.Width(r.scale, "%s", displayItem) + spaceWidth
 
 		if chunkWidth+itemWidth >= maxWidth {
-			chunks = append(chunks, chunk{start: start, end: i-1})
+			chunks = append(chunks, chunk{start: start, end: i - 1})
 
 			if currItemIdx >= start && currItemIdx <= i-1 {
 				chunkIdx = len(chunks) - 1

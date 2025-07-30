@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	//"runtime/debug"
 
 	"github.com/jcocozza/gmenu/internal/menu"
 	"github.com/jcocozza/gmenu/internal/renderer"
@@ -58,11 +59,15 @@ func (a *GMenuApp) Render(p util.Profiler) {
 	defer a.r.Cleanup()
 	a.m.ExecSearch()
 	// init render
-	if err := a.r.RenderFrame(a.m); err != nil {
+	if err := a.r.InitalRender(a.m); err != nil {
 		panic(err)
 	}
 	err := p.Stop()
-	if err != nil { panic(err) }
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("init render time", p.Duration().String())
+	//debug.SetGCPercent(100)
 	for !a.r.Done() {
 		a.r.PollEvents()
 		act := a.r.Action()

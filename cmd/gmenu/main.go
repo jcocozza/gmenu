@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"runtime"
+	//"runtime/debug"
 
 	"github.com/jcocozza/gmenu/internal/app"
 	"github.com/jcocozza/gmenu/internal/util"
@@ -34,6 +35,7 @@ func printVersion() {
 }
 
 func main() {
+	//debug.SetGCPercent(-1)
 	// this *NEEDS* to be in the main method, otherwise things break
 	runtime.LockOSThread()
 	flag.Usage = usage

@@ -14,6 +14,7 @@ type Renderer interface{
 	Done() bool
 	// populate the action
 	PollEvents()
+	InitalRender(gm *menu.GMenu) error
 	// render a single frame
 	RenderFrame(gm *menu.GMenu) error
 	// return the current action

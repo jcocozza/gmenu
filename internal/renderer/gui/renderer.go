@@ -101,6 +101,57 @@ func (r *GUIRenderer) PollEvents() {
 	glfw.PollEvents()
 }
 
+// the first render
+func (r *GUIRenderer) InitalRender(gm *menu.GMenu) error {
+	spaceWidth := r.spaceWidth()
+	gl.ClearColor(0.1, 0.1, 0.1, 1.0)
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
+
+	// render input
+	input := gm.Input()
+	var inputDisplay string
+	if len(input) < int(r.inputWidth()) {
+		inputDisplay = input
+	} else {
+		start := 0
+		end := int(r.inputWidth())
+		shift := len(input) - int(r.inputWidth())
+		inputDisplay = input[start+shift : end+shift]
+	}
+	r.f.SetColor(1.0, 1.0, 1.0, 1.0)
+	if err := r.f.Printf(0, float32(r.height)/2, r.scale, "%s", inputDisplay); err != nil {
+		return err
+	}
+
+	// this renders the results
+	items := gm.Results()
+	selected := gm.Selected()
+	offset := float32(r.width) - r.resultsWidth()
+	height := float32(r.height) / 2
+
+	var displayWidth float32
+	c := r.firstChunk(items)
+	for i, elm := range items[c.start : c.end+1] {
+		isCurrent := c.start+i == selected
+		displayItem := elm.Display()
+		if isCurrent {
+			r.f.SetColor(255, 1.0, 1.0, 255)
+			displayItem = fmt.Sprintf("[%s]", displayItem)
+		}
+		if err := r.f.Printf(offset+displayWidth, height, r.scale, "%s", displayItem); err != nil {
+			return err
+		}
+		if isCurrent {
+			r.f.SetColor(1.0, 1.0, 1.0, 1.0)
+		}
+		itemWidth := r.f.Width(r.scale, "%s", displayItem)
+		displayWidth += itemWidth + spaceWidth
+	}
+	r.w.SwapBuffers()
+	return nil
+}
+
 func (r *GUIRenderer) RenderFrame(gm *menu.GMenu) error {
 	spaceWidth := r.spaceWidth()
 	//gl.ClearColor(0.1, 0.1, 0.1, 1.0)
