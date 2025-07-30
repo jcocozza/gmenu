@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/go-gl/gl/all-core/gl"
+	//"github.com/go-gl/gl/all-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/jcocozza/gmenu/internal/menu"
-	"github.com/nullboundary/glfont"
+	"github.com/jcocozza/glfont"
+	"github.com/jcocozza/gl/gl"
 
 	fnt "github.com/jcocozza/gmenu/font"
 )
@@ -39,7 +40,6 @@ func (r *GUIRenderer) Init() error {
 	glfw.WindowHint(glfw.Decorated, glfw.False)
 	glfw.WindowHint(glfw.Resizable, glfw.False)
 	glfw.WindowHint(glfw.Floating, glfw.True)
-
 
 	if useStrictCoreProfile {
 		glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
@@ -103,6 +103,9 @@ func (r *GUIRenderer) PollEvents() {
 
 func (r *GUIRenderer) RenderFrame(gm *menu.GMenu) error {
 	spaceWidth := r.spaceWidth()
+	//gl.ClearColor(0.1, 0.1, 0.1, 1.0)
+	//gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
 	gl.ClearColor(0.1, 0.1, 0.1, 1.0)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 

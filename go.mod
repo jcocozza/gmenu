@@ -1,11 +1,11 @@
 module github.com/jcocozza/gmenu
 
-go 1.24.3
+go 1.24.4
 
 require (
-	github.com/go-gl/gl v0.0.0-20231021071112-07e5d0ea2e71
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20250301202403-da16c1255728
-	github.com/nullboundary/glfont v0.0.0-20230301004353-1696e6150876
+	github.com/jcocozza/gl v0.0.0-20250730132801-accb255fe835
+	github.com/jcocozza/glfont v0.0.0-20250730133658-2e841ccc3545
 )
 
 require (
