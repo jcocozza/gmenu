@@ -6,10 +6,11 @@ import (
 	"io"
 	"os"
 	"runtime"
+
 	//"runtime/debug"
 
 	"github.com/jcocozza/gmenu/internal/app"
-	"github.com/jcocozza/gmenu/internal/util"
+	"github.com/jcocozza/goprof"
 )
 
 var (
@@ -71,12 +72,7 @@ func main() {
 
 	cfg := app.AppConfig{Alias: alias}
 
-	p := util.NewProfiler()
-	if err := p.Init("gmenu"); err != nil {
-		fmt.Fprintf(os.Stdout, "error: startup: %v", err)
-		os.Exit(1)
-	}
-	if err := p.Start(); err != nil {
+	if err := goprof.Start("gmenu"); err != nil {
 		fmt.Fprintf(os.Stdout, "error: startup: %v", err)
 		os.Exit(1)
 	}
@@ -86,5 +82,5 @@ func main() {
 		fmt.Fprintf(os.Stdout, "error: startup: %v", err)
 		os.Exit(1)
 	}
-	a.Render(p)
+	a.Render()
 }

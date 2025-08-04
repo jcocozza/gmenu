@@ -6,5 +6,9 @@ github.com/jcocozza/gl v0.0.0-20250730132801-accb255fe835 h1:QH5kYF/jmPolBmAMaaX
 github.com/jcocozza/gl v0.0.0-20250730132801-accb255fe835/go.mod h1:KkELYzKXt/J5xyD3O5Fd5+qH3ys0GQ5SYejA3Wklk6g=
 github.com/jcocozza/glfont v0.0.0-20250730133658-2e841ccc3545 h1:pjprXHLQAzddiiYnFJmBZk42HB0HL/2xTZcfKPYAGJ4=
 github.com/jcocozza/glfont v0.0.0-20250730133658-2e841ccc3545/go.mod h1:p9TNwLAW51DKlIe0GXOBPK2rUkOMxw1HKxyQGp6TmNg=
+github.com/jcocozza/goprof v0.0.0-20250801125127-7d1f2d266a59 h1:mHMeUfkWOoUP5CDK1+qqOdotc1CyHveOWtcYVw2pQto=
+github.com/jcocozza/goprof v0.0.0-20250801125127-7d1f2d266a59/go.mod h1:8UMI/OyWd7BTcdu7HJR9ZEDTvi9SV/w5RYSO5qef3PY=
+github.com/jcocozza/goprof v0.0.0-20250804005808-048f1295bf61 h1:Ia0niFY7EHFgm4aTREozCYZ+dXPAVkC3fV1JRRQngbo=
+github.com/jcocozza/goprof v0.0.0-20250804005808-048f1295bf61/go.mod h1:8UMI/OyWd7BTcdu7HJR9ZEDTvi9SV/w5RYSO5qef3PY=
 golang.org/x/image v0.29.0 h1:HcdsyR4Gsuys/Axh0rDEmlBmB68rW1U9BUdB3UVHsas=
 golang.org/x/image v0.29.0/go.mod h1:RVJROnf3SLK8d26OW91j4FrIHGbsJ8QnbEocVTOWQDA=

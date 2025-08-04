@@ -4,11 +4,12 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+
 	//"runtime/debug"
 
 	"github.com/jcocozza/gmenu/internal/menu"
 	"github.com/jcocozza/gmenu/internal/renderer"
-	"github.com/jcocozza/gmenu/internal/util"
+	"github.com/jcocozza/goprof"
 )
 
 type AppConfig struct {
@@ -52,7 +53,7 @@ func (a *GMenuApp) readAndParseItems(r io.Reader) ([]menu.Item, error) {
 	return items, scanner.Err()
 }
 
-func (a *GMenuApp) Render(p util.Profiler) {
+func (a *GMenuApp) Render() {
 	if err := a.r.Init(); err != nil {
 		panic(err)
 	}
@@ -62,11 +63,12 @@ func (a *GMenuApp) Render(p util.Profiler) {
 	if err := a.r.InitalRender(a.m); err != nil {
 		panic(err)
 	}
-	err := p.Stop()
+	err := goprof.Stop()
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("init render time", p.Duration().String())
+	fmt.Println("init render time")
+	goprof.Summarize()
 	//debug.SetGCPercent(100)
 	for !a.r.Done() {
 		a.r.PollEvents()
