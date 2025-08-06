@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	Version = "dev"
+	Version = "development build"
 	Commit  = "none"
 	Date    = "unknown"
 )
@@ -34,7 +34,6 @@ func printVersion() {
 }
 
 func main() {
-	//debug.SetGCPercent(-1)
 	// this *NEEDS* to be in the main method, otherwise things break
 	runtime.LockOSThread()
 	flag.Usage = usage
