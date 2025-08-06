@@ -58,7 +58,7 @@ func main() {
 		fpath := flag.Arg(0)
 		file, err := os.Open(fpath)
 		if err != nil {
-			fmt.Fprintf(os.Stdout, "error: could not open file: %v", err)
+			fmt.Fprintf(os.Stdout, "error: could not open file: %v\n", err)
 			os.Exit(1)
 		}
 		defer file.Close()
@@ -73,7 +73,7 @@ func main() {
 
 	a, err := app.NewGMenuApp(cfg, in)
 	if err != nil {
-		fmt.Fprintf(os.Stdout, "error: startup: %v", err)
+		fmt.Fprintf(os.Stdout, "error: startup: %v\n", err)
 		os.Exit(1)
 	}
 	a.Render()

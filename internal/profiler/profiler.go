@@ -11,14 +11,14 @@ import (
 
 func StartProfiler() {
 	if err := goprof.Start("gmenu"); err != nil {
-		fmt.Fprintf(os.Stdout, "error: startup: %v", err)
+		fmt.Fprintf(os.Stdout, "error: startup: %v\n", err)
 		os.Exit(1)
 	}
 }
 
 func StopProfiler() {
 	if err := goprof.Stop(); err != nil {
-		fmt.Fprintf(os.Stdout, "error: stopping: %v", err)
+		fmt.Fprintf(os.Stdout, "error: stopping: %v\n", err)
 		os.Exit(1)
 	}
 	fmt.Println("init render time")
