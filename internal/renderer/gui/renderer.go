@@ -190,7 +190,7 @@ func (r *GUIRenderer) RenderFrame(gm *menu.GMenu) error {
 		isCurrent := c.start+i == selected
 		displayItem := elm.Display()
 		if isCurrent {
-			r.f.SetColor(255, 1.0, 1.0, 255)
+			r.f.SetColor(1.0, 0.2, 0.2, 1.0)
 			displayItem = fmt.Sprintf("[%s]", displayItem)
 		}
 		if err := r.f.Printf(offset+displayWidth, height, r.scale, "%s", displayItem); err != nil {
