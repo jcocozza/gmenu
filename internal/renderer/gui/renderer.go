@@ -108,7 +108,7 @@ func (r *GUIRenderer) InitalRender(gm *menu.GMenu) error {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 	// render input
-	input := gm.Input()
+	input := inputStr(gm)
 	var inputDisplay string
 	if len(input) < int(r.inputWidth()) {
 		inputDisplay = input
@@ -151,16 +151,25 @@ func (r *GUIRenderer) InitalRender(gm *menu.GMenu) error {
 	return nil
 }
 
+func inputStr(gm *menu.GMenu) string {
+	// this renders the input
+	var input string
+	prompt := gm.Prompt()
+	if prompt != "" {
+		input = fmt.Sprintf("%s: %s", gm.Prompt(), gm.Input())
+	} else {
+		input = gm.Input()
+	}
+	return input
+}
+
 func (r *GUIRenderer) RenderFrame(gm *menu.GMenu) error {
 	spaceWidth := r.spaceWidth()
-	//gl.ClearColor(0.1, 0.1, 0.1, 1.0)
-	//gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 	gl.ClearColor(0.1, 0.1, 0.1, 1.0)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-	// this renders the input
-	input := gm.Input()
+	input := inputStr(gm)
 	var inputDisplay string
 	if len(input) < int(r.inputWidth()) {
 		inputDisplay = input

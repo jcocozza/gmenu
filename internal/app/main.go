@@ -13,6 +13,7 @@ import (
 type AppConfig struct {
 	Alias      bool
 	IgnoreCase bool
+	Prompt     string
 }
 
 // GMenuApp glues together all the components
@@ -30,7 +31,7 @@ func NewGMenuApp(cfg AppConfig, r io.Reader) (*GMenuApp, error) {
 	if err != nil {
 		return nil, err
 	}
-	m := menu.NewGmenu(items, cfg.IgnoreCase)
+	m := menu.NewGmenu(items, cfg.IgnoreCase, cfg.Prompt)
 	render := renderer.RendererFactory()
 	a.m = m
 	a.r = render

@@ -6,14 +6,16 @@ type GMenu struct {
 	currentResults []Item
 	selected       int
 	ignoreCase     bool
+	prompt         string
 
 	s Searcher
 }
 
-func NewGmenu(items []Item, ignoreCase bool) *GMenu {
+func NewGmenu(items []Item, ignoreCase bool, prompt string) *GMenu {
 	return &GMenu{
-		s: SearcherFactory(items),
+		s:          SearcherFactory(items),
 		ignoreCase: ignoreCase,
+		prompt:     prompt,
 	}
 }
 
@@ -25,6 +27,10 @@ func (g *GMenu) RemoveChar() {
 	if len(g.input) > 0 {
 		g.input = g.input[:len(g.input)-1]
 	}
+}
+
+func (g *GMenu) Prompt() string {
+	return g.prompt
 }
 
 func (g *GMenu) Input() string {

@@ -49,6 +49,10 @@ func main() {
 	var ignoreCase bool
 	flag.BoolVar(&ignoreCase, "i", false, "ignore case")
 
+	var prompt string
+	flag.StringVar(&prompt, "p", "", "prompt to show")
+	flag.StringVar(&prompt, "prompt", "", "prompt to show")
+
 	flag.Parse()
 
 	if version {
@@ -70,7 +74,7 @@ func main() {
 		in = os.Stdin
 	}
 
-	cfg := app.AppConfig{Alias: alias, IgnoreCase: ignoreCase}
+	cfg := app.AppConfig{Alias: alias, IgnoreCase: ignoreCase, Prompt: prompt}
 
 	profiler.StartProfiler()
 
