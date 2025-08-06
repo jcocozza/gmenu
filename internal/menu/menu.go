@@ -5,13 +5,15 @@ type GMenu struct {
 	input          []rune
 	currentResults []Item
 	selected       int
+	ignoreCase     bool
 
 	s Searcher
 }
 
-func NewGmenu(items []Item) *GMenu {
+func NewGmenu(items []Item, ignoreCase bool) *GMenu {
 	return &GMenu{
 		s: SearcherFactory(items),
+		ignoreCase: ignoreCase,
 	}
 }
 
@@ -31,7 +33,7 @@ func (g *GMenu) Input() string {
 
 func (g *GMenu) ExecSearch() {
 	g.selected = 0
-	g.currentResults = g.s.Search(string(g.input))
+	g.currentResults = g.s.Search(string(g.input), g.ignoreCase)
 }
 
 func (g *GMenu) Results() []Item {

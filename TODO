@@ -1,8 +1,4 @@
 - implement a fuzzy search
+- add prompt (-p <prompt>) flag
 - exec flag?
     - run the "exec" command with the selected value passed in
-- font:
-    - more cleanly organize the font/ dir
-    - make the font/text more legible; not sure why it is so fuzzy (especially when highlighted)
-- asynchronously populate list of elements (this is good for large inputs)
-- case insensitive

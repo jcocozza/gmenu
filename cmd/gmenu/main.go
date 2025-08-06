@@ -46,6 +46,9 @@ func main() {
 	flag.BoolVar(&alias, "a", false, "enable alias parsing mode")
 	flag.BoolVar(&alias, "alias", false, "enable alias parsing mode")
 
+	var ignoreCase bool
+	flag.BoolVar(&ignoreCase, "i", false, "ignore case")
+
 	flag.Parse()
 
 	if version {
@@ -67,7 +70,7 @@ func main() {
 		in = os.Stdin
 	}
 
-	cfg := app.AppConfig{Alias: alias}
+	cfg := app.AppConfig{Alias: alias, IgnoreCase: ignoreCase}
 
 	profiler.StartProfiler()
 

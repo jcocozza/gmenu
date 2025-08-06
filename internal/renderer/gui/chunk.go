@@ -47,7 +47,8 @@ func (r *GUIRenderer) firstChunk(items []menu.Item) chunk {
 		}
 		chunkWidth += itemWidth
 	}
-	panic("missed the train!")
+
+	return chunk{start: 0, end: len(items)-1}
 }
 
 func (r *GUIRenderer) chunkify(items []menu.Item, currItemIdx int) ([]chunk, int) {
