@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"io"
 
-	//"runtime/debug"
-
 	"github.com/jcocozza/gmenu/internal/menu"
+	"github.com/jcocozza/gmenu/internal/profiler"
 	"github.com/jcocozza/gmenu/internal/renderer"
-	"github.com/jcocozza/goprof"
 )
 
 type AppConfig struct {
@@ -63,13 +61,7 @@ func (a *GMenuApp) Render() {
 	if err := a.r.InitalRender(a.m); err != nil {
 		panic(err)
 	}
-	err := goprof.Stop()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("init render time")
-	goprof.Summarize()
-	//debug.SetGCPercent(100)
+	profiler.StopProfiler()
 	for !a.r.Done() {
 		a.r.PollEvents()
 		act := a.r.Action()

@@ -12,3 +12,9 @@ I also added a niche, but perhaps useful "alias" mode that parses items just a l
 ## (Known) Limitations
 
 - Doesn't behave quite as expected when using i3, but still works
+
+
+## Developement
+
+For profiling build the binary with `profile` tag: `go build -tags profile ./cmd/gmenu/`.
+

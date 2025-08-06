@@ -1,3 +1,5 @@
 gmenu
 *.pprof
+*.prof
+*.out
 *.txt

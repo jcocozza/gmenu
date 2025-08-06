@@ -7,10 +7,8 @@ import (
 	"os"
 	"runtime"
 
-	//"runtime/debug"
-
 	"github.com/jcocozza/gmenu/internal/app"
-	"github.com/jcocozza/goprof"
+	"github.com/jcocozza/gmenu/internal/profiler"
 )
 
 var (
@@ -72,10 +70,7 @@ func main() {
 
 	cfg := app.AppConfig{Alias: alias}
 
-	if err := goprof.Start("gmenu"); err != nil {
-		fmt.Fprintf(os.Stdout, "error: startup: %v", err)
-		os.Exit(1)
-	}
+	profiler.StartProfiler()
 
 	a, err := app.NewGMenuApp(cfg, in)
 	if err != nil {
