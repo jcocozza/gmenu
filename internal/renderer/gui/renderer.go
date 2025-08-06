@@ -6,9 +6,9 @@ import (
 
 	//"github.com/go-gl/gl/all-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
-	"github.com/jcocozza/gmenu/internal/menu"
-	"github.com/jcocozza/glfont"
 	"github.com/jcocozza/gl/gl"
+	"github.com/jcocozza/glfont"
+	"github.com/jcocozza/gmenu/internal/menu"
 
 	fnt "github.com/jcocozza/gmenu/font"
 )
@@ -107,7 +107,6 @@ func (r *GUIRenderer) InitalRender(gm *menu.GMenu) error {
 	gl.ClearColor(0.1, 0.1, 0.1, 1.0)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-
 	// render input
 	input := gm.Input()
 	var inputDisplay string
@@ -136,7 +135,7 @@ func (r *GUIRenderer) InitalRender(gm *menu.GMenu) error {
 		isCurrent := c.start+i == selected
 		displayItem := elm.Display()
 		if isCurrent {
-			r.f.SetColor(255, 1.0, 1.0, 255)
+			r.f.SetColor(1.0, 0.2, 0.2, 1.0)
 			displayItem = fmt.Sprintf("[%s]", displayItem)
 		}
 		if err := r.f.Printf(offset+displayWidth, height, r.scale, "%s", displayItem); err != nil {
