@@ -131,6 +131,7 @@ void draw(int max_width, char *input, struct elm *results, int num_results,
 }
 
 int main(void) {
+  SetConfigFlags(FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_TOPMOST);
   numlines = readlines(); // populate elms
   int numresults = numlines;
   struct elm *results = elms;
@@ -144,7 +145,7 @@ int main(void) {
   int height = 30;
   // Re-set the window size (since we already created a dummy one)
   SetWindowSize(width, height);
-  SetWindowTitle("Thin Bar");
+  // SetWindowTitle("Thin Bar");
   SetWindowPosition(0, 0);
 
   int inputCnt = 0;
