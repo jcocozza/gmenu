@@ -60,6 +60,10 @@ char *strcombine(char *s1, char *s2) {
   return res;
 }
 
+int strwhitespace(char *s) {
+  return !strcmp(s, " ") || !strcmp(s, "\n") || !strcmp(s, "");
+}
+
 // TODO: make this a dynamic allocation for each line
 int readlines(FILE *f, int alias_mode) {
   char line[MAX_LINE_LENGTH];
@@ -119,6 +123,8 @@ const int FONT_SIZE = 10;
 void draw(int max_width, char *prompt, char *input, struct elm *results,
           int num_results, int result_offset, int selected_result) {
 
+  int spacer_width = MeasureText("  ", FONT_SIZE);
+
   int max_input_size = max_width;
   int min_input_size = .25 * max_input_size;
 
@@ -142,15 +148,16 @@ void draw(int max_width, char *prompt, char *input, struct elm *results,
   if (left_width > min_input_size) {
     offset = left_width;
   }
-  printf("prompt: %s, input: %s, LEFT: %s, LEFT WIDTH: %d, OFFSET: %d, RESULT "
-         "SIZE: %d\n",
-         prompt, input, left, left_width, offset, results_size);
+  offset += spacer_width;
   while (rendered_results_size <= results_size && i < num_results) {
     struct elm itm = results[i];
-
     char *display_text = itm.alias;
+    if (strwhitespace(display_text)) {
+      display_text = "<whitespace>";
+    }
+
     int display_text_size = MeasureText(display_text, FONT_SIZE);
-    rendered_results_size += display_text_size;
+    rendered_results_size += display_text_size + spacer_width;
 
     if (i == selected_result) {
       DrawText(display_text, offset, 10, FONT_SIZE, RED);
@@ -158,7 +165,7 @@ void draw(int max_width, char *prompt, char *input, struct elm *results,
       DrawText(display_text, offset, 10, FONT_SIZE, BLACK);
     }
     i++;
-    offset += display_text_size;
+    offset += display_text_size + spacer_width;
   }
 }
 
@@ -237,7 +244,7 @@ int main(int argc, char *argv[]) {
       if ((key >= 32) && (key <= 125) && (inputCnt < MAX_INPUT_CHARS)) {
         do_search = 1;
         input[inputCnt] = (char)key;
-        input[inputCnt+1] = '\0';
+        input[inputCnt + 1] = '\0';
         inputCnt++;
       }
       key = GetCharPressed();
@@ -259,10 +266,10 @@ int main(int argc, char *argv[]) {
     }
 
     if (IsKeyPressed(KEY_RIGHT) && numresults != 0) {
-      if (result_offset < numresults) {
+      if (result_offset < numresults - 1) {
         result_offset++;
         selected_result++;
-      } else if (result_offset >= numresults) { // back to beginning
+      } else { // back to beginning
         result_offset = 0;
         selected_result = 0;
       }
