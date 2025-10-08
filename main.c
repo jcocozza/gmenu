@@ -171,6 +171,14 @@ void draw(int max_width, char *prompt, char *input, struct elm *results,
 
 void usage() { fprintf(stderr, "usage: gmenu [flags] [FILE]\n"); }
 
+void usage_long() {
+  printf("usage: gmenu [flags] [FILE]\n");
+  printf("\n");
+  printf("flags:\n");
+  printf("-a, --alias: use gmenu in alias mode\n");
+  printf("-p, --prompt: include a prompt in the gui\n");
+}
+
 int main(int argc, char *argv[]) {
   SetTraceLogLevel(LOG_NONE); // tell raylib to be quiet
 
@@ -184,7 +192,7 @@ int main(int argc, char *argv[]) {
   for (int i = 1; i < argc; i++) {
     if (argv[i][0] == '-' && strlen(argv[i]) > 0) {
       if (!strcmp(argv[i], "--help")) {
-        printf("help menu\n");
+        usage_long();
         return 0;
       } else if (!strcmp(argv[i], "-h")) {
         printf("help menu\n");
@@ -195,7 +203,7 @@ int main(int argc, char *argv[]) {
         i++;
         prompt = argv[i];
       } else { // undefined flags
-        usage();
+        usage_long();
         return 1;
       }
     } else {
