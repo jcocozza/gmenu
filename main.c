@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #ifdef __APPLE__
 void setWindowBehavior(void *window);
@@ -42,6 +43,21 @@ char *substr(char *s, int start, int end) {
 
   strncpy(sub, s + start, length);
   return sub;
+}
+
+char *strcombine(char *s1, char *s2) {
+  size_t l1 = strlen(s1);
+  size_t l2 = strlen(s2);
+
+  char *res = malloc(l1 + l2 + 1);
+  if (res == NULL) {
+    return NULL;
+  }
+
+  memcpy(res, s1, l1);
+  memcpy(res + l1, s2, l2);
+  res[l1 + l2] = '\0';
+  return res;
 }
 
 // TODO: make this a dynamic allocation for each line
@@ -102,52 +118,47 @@ const int FONT_SIZE = 10;
 
 void draw(int max_width, char *prompt, char *input, struct elm *results,
           int num_results, int result_offset, int selected_result) {
-  // TODO: this should be moved to main since it doesn't need to be recomputed
-  // each time
-  int sep_size = MeasureText(", ", FONT_SIZE);
 
   int max_input_size = max_width;
   int min_input_size = .25 * max_input_size;
 
-
-  char display_input[MAX_INPUT_CHARS];
-  snprintf(display_input, MAX_INPUT_CHARS, "%s: %s", prompt, input);
-  char *final_input_display = display_input;
-  int input_size = MeasureText(display_input, FONT_SIZE);
-  int results_size = max_width - input_size;
-  if (input_size > max_input_size) {
-    final_input_display = substr(display_input, 0, max_input_size);
+  char *final_prompt = "";
+  if (strlen(prompt)) {
+    final_prompt = strcombine(prompt, ": ");
   }
+  char *left = strcombine(final_prompt, input);
+  int left_width = MeasureText(left, FONT_SIZE);
+  if (left == NULL) {
+    left = "";
+    left_width = 0;
+  }
+  DrawText(left, 0, 10, FONT_SIZE, BLACK);
 
-  DrawText(final_input_display, 10, 10, FONT_SIZE, BLACK);
+  int results_size = max_width - left_width;
+  int rendered_results_size = 0;
+  int i = result_offset;
 
   int offset = min_input_size;
-  if (input_size > min_input_size) {
-    offset = input_size;
+  if (left_width > min_input_size) {
+    offset = left_width;
   }
-
-  int curr_results_size = 0;
-
-  int i = result_offset;
-  while (curr_results_size <= results_size && i < num_results) {
+  printf("prompt: %s, input: %s, LEFT: %s, LEFT WIDTH: %d, OFFSET: %d, RESULT "
+         "SIZE: %d\n",
+         prompt, input, left, left_width, offset, results_size);
+  while (rendered_results_size <= results_size && i < num_results) {
     struct elm itm = results[i];
 
     char *display_text = itm.alias;
-    if (strlen(display_text) == 0 || strcmp(display_text, "\n") == 0 ||
-        strcmp(display_text, " ") == 0) {
-      display_text = "_";
-    }
-    int txt_size = MeasureText(display_text, FONT_SIZE);
-    curr_results_size += txt_size;
+    int display_text_size = MeasureText(display_text, FONT_SIZE);
+    rendered_results_size += display_text_size;
 
-    // TODO: include separator
-    if (i == selected_result) { // highlighted one
-      DrawText(display_text, offset + sep_size, 10, FONT_SIZE, RED);
-    } else { // other results
-      DrawText(display_text, offset + sep_size, 10, FONT_SIZE, BLACK);
+    if (i == selected_result) {
+      DrawText(display_text, offset, 10, FONT_SIZE, RED);
+    } else {
+      DrawText(display_text, offset, 10, FONT_SIZE, BLACK);
     }
     i++;
-    offset += txt_size + sep_size;
+    offset += display_text_size;
   }
 }
 
@@ -199,7 +210,7 @@ int main(int argc, char *argv[]) {
   // Create temporary window to initialize the windowing system
   InitWindow(100, 100, "Init");
 #ifdef __APPLE__
-  void *window = GetWindowHandle(); // Returns NSWindow* on macOS
+  void *window = GetWindowHandle();
   setWindowBehavior(window);
 #endif
 
@@ -207,12 +218,11 @@ int main(int argc, char *argv[]) {
   int width = GetMonitorWidth(monitor);
   const int maxWidth = width - 20;
   int height = 30;
-  // Re-set the window size (since we already created a dummy one)
   SetWindowSize(width, height);
   SetWindowPosition(0, 0);
 
   int inputCnt = 0;
-  char input[MAX_INPUT_CHARS];
+  char input[MAX_INPUT_CHARS + 1] = "\0";
 
   int result_offset = 0;
   int selected_result = 0;
@@ -227,6 +237,7 @@ int main(int argc, char *argv[]) {
       if ((key >= 32) && (key <= 125) && (inputCnt < MAX_INPUT_CHARS)) {
         do_search = 1;
         input[inputCnt] = (char)key;
+        input[inputCnt+1] = '\0';
         inputCnt++;
       }
       key = GetCharPressed();
