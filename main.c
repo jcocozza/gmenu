@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef __APPLE__
+void setWindowBehavior(void *window);
+#endif
+
 #define MAX_LINE_LENGTH 1024
 #define MAX_INPUT_CHARS 1024
 
@@ -116,8 +120,6 @@ void draw(int max_width, char *input, struct elm *results, int num_results,
     int txt_size = MeasureText(display_text, FONT_SIZE);
     curr_results_size += txt_size;
 
-    printf("%d, %d\n", i, selected_result);
-
     // TODO: include separator
     if (i == selected_result) { // highlighted one
       DrawText(display_text, offset + sep_size, 10, FONT_SIZE, RED);
@@ -131,14 +133,20 @@ void draw(int max_width, char *input, struct elm *results, int num_results,
 }
 
 int main(void) {
-  SetConfigFlags(FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_TOPMOST);
+  SetTraceLogLevel(LOG_NONE);
   numlines = readlines(); // populate elms
   int numresults = numlines;
   struct elm *results = elms;
   int do_search = 0;
 
+  SetConfigFlags(FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_TOPMOST);
   // Create temporary window to initialize the windowing system
   InitWindow(100, 100, "Init");
+#ifdef __APPLE__
+  void *window = GetWindowHandle(); // Returns NSWindow* on macOS
+  setWindowBehavior(window);
+#endif
+
   int monitor = GetCurrentMonitor();
   int width = GetMonitorWidth(monitor);
   const int maxWidth = width - 20;
@@ -206,11 +214,10 @@ int main(void) {
       return 0;
     }
 
-      BeginDrawing();
-      ClearBackground(RAYWHITE);
-      draw(maxWidth, input, results, numresults, result_offset,
-           selected_result);
-      EndDrawing();
+    BeginDrawing();
+    ClearBackground(RAYWHITE);
+    draw(maxWidth, input, results, numresults, result_offset, selected_result);
+    EndDrawing();
   }
   CloseWindow();
   return 0;
