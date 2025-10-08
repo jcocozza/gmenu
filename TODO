@@ -1,3 +1,6 @@
+- alias mode
+- write a cli
+- read from file (not just stdin)
 - implement a fuzzy search
 - add prompt (-p <prompt>) flag
 - exec flag?
