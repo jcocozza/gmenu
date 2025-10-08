@@ -1,6 +1,3 @@
-# linux:
-#		gcc -O3 -DNDEBUG main.c -lraylib -lGL -lm -lpthread -ldl -o gmenu
-
 # Paths to Raylib installed via Homebrew
 RAYLIB_INC = /opt/homebrew/opt/raylib/include
 RAYLIB_LIB = /opt/homebrew/opt/raylib/lib
@@ -18,6 +15,12 @@ all: debug
 
 clean:
 	rm -f $(OUT)
+
+
+linux:
+	gcc -flto -O3 -DNDEBUG -march=native main.c -lraylib -lGL -lm -lpthread -ldl -o $(OUT)
+	strip $(OUT)
+
 
 # these are all for macos
 debug:
@@ -38,4 +41,4 @@ release_static:
 		-I$(RAYLIB_INC) $(RAYLIB_LIB)/libraylib.a \
 		$(FRAMEWORKS) \
 		-o $(OUT)
-	strip $(OUT)_static
+	strip $(OUT)

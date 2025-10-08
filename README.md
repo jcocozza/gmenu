@@ -11,7 +11,7 @@ I also added a niche, but perhaps useful "alias" mode that parses items just a l
 ## Why?
 
 [dmenu](https://tools.suckless.org/dmenu/) is very good, but unfortunately, some of the time I cannot be on linux.
-I also don't like when I can't use the same tool across multiple platforms. I want something that functions the same regardless of where I use it.
+I also don't like when I can't use the same tool across multiple platforms. I want something that functions (and looks) the same regardless of where I use it.
 Moreover, I found some of the existing alternatives to dmenu a little too clunky.
 
 ## Uses

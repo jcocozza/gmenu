@@ -11,6 +11,7 @@ void setWindowBehavior(void *window);
 #define MAX_INPUT_CHARS 1024
 
 struct elm {
+  char *alias;
   char *text;
 };
 
@@ -44,17 +45,32 @@ char *substr(char *s, int start, int end) {
 }
 
 // TODO: make this a dynamic allocation for each line
-int readlines() {
+int readlines(FILE *f, int alias_mode) {
   char line[MAX_LINE_LENGTH];
   int alloclines = 0;
   int i = 0;
 
-  while (fgets(line, sizeof(line), stdin)) {
+  while (fgets(line, sizeof(line), f)) {
     if (i + 1 > alloclines) {
       alloclines += 256;
       elms = realloc(elms, alloclines * sizeof(*elms));
     }
-    elms[i].text = strcp(line);
+
+    if (alias_mode) {
+      char *tok = strtok(line, " ");
+      char *first = strcp(tok);
+      tok = strtok(NULL, " ");
+      char *second = strcp(tok);
+      if (tok == NULL) {
+        second = first;
+      }
+      elms[i].alias = first;
+      elms[i].text = second;
+    } else {
+      char *ln = strcp(line);
+      elms[i].alias = ln;
+      elms[i].text = ln;
+    }
     i++;
   }
   return i;
@@ -72,8 +88,9 @@ struct elm *search(char *term, int *numresults) {
       allocresults += 256;
       results = realloc(results, allocresults * sizeof(*results));
     }
-    if (match(term, elms[i].text)) {
+    if (match(term, elms[i].alias)) {
       results[j].text = elms[i].text;
+      results[j].alias = elms[i].alias;
       j++;
     }
   };
@@ -83,23 +100,26 @@ struct elm *search(char *term, int *numresults) {
 
 const int FONT_SIZE = 10;
 
-void draw(int max_width, char *input, struct elm *results, int num_results,
-          int result_offset, int selected_result) {
+void draw(int max_width, char *prompt, char *input, struct elm *results,
+          int num_results, int result_offset, int selected_result) {
   // TODO: this should be moved to main since it doesn't need to be recomputed
   // each time
   int sep_size = MeasureText(", ", FONT_SIZE);
+
   int max_input_size = max_width;
-  int min_input_size = .25 * max_width;
+  int min_input_size = .25 * max_input_size;
 
-  int input_size = MeasureText(input, FONT_SIZE);
+
+  char display_input[MAX_INPUT_CHARS];
+  snprintf(display_input, MAX_INPUT_CHARS, "%s: %s", prompt, input);
+  char *final_input_display = display_input;
+  int input_size = MeasureText(display_input, FONT_SIZE);
   int results_size = max_width - input_size;
-
-  char *display_input = input;
   if (input_size > max_input_size) {
-    display_input = substr(input, 0, max_input_size);
+    final_input_display = substr(display_input, 0, max_input_size);
   }
 
-  DrawText(display_input, 10, 10, FONT_SIZE, BLACK);
+  DrawText(final_input_display, 10, 10, FONT_SIZE, BLACK);
 
   int offset = min_input_size;
   if (input_size > min_input_size) {
@@ -112,7 +132,7 @@ void draw(int max_width, char *input, struct elm *results, int num_results,
   while (curr_results_size <= results_size && i < num_results) {
     struct elm itm = results[i];
 
-    char *display_text = itm.text;
+    char *display_text = itm.alias;
     if (strlen(display_text) == 0 || strcmp(display_text, "\n") == 0 ||
         strcmp(display_text, " ") == 0) {
       display_text = "_";
@@ -127,14 +147,50 @@ void draw(int max_width, char *input, struct elm *results, int num_results,
       DrawText(display_text, offset + sep_size, 10, FONT_SIZE, BLACK);
     }
     i++;
-
     offset += txt_size + sep_size;
   }
 }
 
-int main(void) {
-  SetTraceLogLevel(LOG_NONE);
-  numlines = readlines(); // populate elms
+void usage() { fprintf(stderr, "usage: gmenu [flags] [FILE]\n"); }
+
+int main(int argc, char *argv[]) {
+  SetTraceLogLevel(LOG_NONE); // tell raylib to be quiet
+
+  FILE *f = stdin;
+
+  // flags
+  int alias_mode = 0;
+  char *prompt = "";
+
+  // CLI stuff
+  for (int i = 1; i < argc; i++) {
+    if (argv[i][0] == '-' && strlen(argv[i]) > 0) {
+      if (!strcmp(argv[i], "--help")) {
+        printf("help menu\n");
+        return 0;
+      } else if (!strcmp(argv[i], "-h")) {
+        printf("help menu\n");
+        return 0;
+      } else if (!strcmp(argv[i], "-a") || !strcmp(argv[i], "--alias")) {
+        alias_mode = 1;
+      } else if (!strcmp(argv[i], "-p") || !strcmp(argv[i], "--prompt")) {
+        i++;
+        prompt = argv[i];
+      } else { // undefined flags
+        usage();
+        return 1;
+      }
+    } else {
+      f = fopen(argv[i], "r");
+      if (!f) {
+        perror("failed to open file");
+        return 1;
+      }
+      break; // for now we just allow for 1 file
+    }
+  }
+
+  numlines = readlines(f, alias_mode); // populate elms
   int numresults = numlines;
   struct elm *results = elms;
   int do_search = 0;
@@ -153,18 +209,19 @@ int main(void) {
   int height = 30;
   // Re-set the window size (since we already created a dummy one)
   SetWindowSize(width, height);
-  // SetWindowTitle("Thin Bar");
   SetWindowPosition(0, 0);
 
   int inputCnt = 0;
-  char input[MAX_INPUT_CHARS] = "";
+  char input[MAX_INPUT_CHARS];
+
   int result_offset = 0;
   int selected_result = 0;
 
-  draw(maxWidth, input, results, numresults, result_offset, selected_result);
+  // initial draw with all all elements
+  draw(maxWidth, prompt, input, results, numresults, result_offset,
+       selected_result);
 
   while (!WindowShouldClose()) {
-
     int key = GetCharPressed();
     while (key > 0) {
       if ((key >= 32) && (key <= 125) && (inputCnt < MAX_INPUT_CHARS)) {
@@ -216,7 +273,8 @@ int main(void) {
 
     BeginDrawing();
     ClearBackground(RAYWHITE);
-    draw(maxWidth, input, results, numresults, result_offset, selected_result);
+    draw(maxWidth, prompt, input, results, numresults, result_offset,
+         selected_result);
     EndDrawing();
   }
   CloseWindow();
