@@ -138,7 +138,7 @@ void draw(int max_width, char *prompt, char *input, struct elm *results,
     left = "";
     left_width = 0;
   }
-  DrawText(left, 0, 10, FONT_SIZE, BLACK);
+  DrawText(left, 10, 10, FONT_SIZE, BLACK);
 
   int results_size = max_width - left_width;
   int rendered_results_size = 0;
