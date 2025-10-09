@@ -1,4 +1,6 @@
 #include "raylib.h"
+#include <_string.h>
+#include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,9 +26,9 @@ char *strcp(char *s) {
     return NULL;
   size_t len = strlen(s) + 1;
   char *cp = malloc(len);
-  if (cp) {
-    memcpy(cp, s, len);
-  }
+  if (!cp)
+    return NULL;
+  memcpy(cp, s, len);
   return cp;
 }
 
@@ -37,10 +39,8 @@ char *substr(char *s, int start, int end) {
     return NULL;
   if (end > src_len)
     end = src_len;
-
   int length = end - start;
   char *sub = malloc(length);
-
   strncpy(sub, s + start, length);
   return sub;
 }
@@ -75,7 +75,6 @@ int readlines(FILE *f, int alias_mode) {
       alloclines += 256;
       elms = realloc(elms, alloclines * sizeof(*elms));
     }
-
     if (alias_mode) {
       char *tok = strtok(line, " ");
       char *first = strcp(tok);
@@ -169,7 +168,7 @@ void draw(int max_width, char *prompt, char *input, struct elm *results,
   }
 }
 
-void usage() { fprintf(stderr, "usage: gmenu [flags] [FILE]\n"); }
+void usage() { fprintf(stderr, "usage: gmenu [flags] [FILES]\n"); }
 
 void usage_long() {
   printf("usage: gmenu [flags] [FILE]\n");
@@ -182,7 +181,8 @@ void usage_long() {
 int main(int argc, char *argv[]) {
   SetTraceLogLevel(LOG_NONE); // tell raylib to be quiet
 
-  FILE *f = stdin;
+  FILE **files = NULL;
+  int num_files = 0;
 
   // flags
   int alias_mode = 0;
@@ -207,16 +207,27 @@ int main(int argc, char *argv[]) {
         return 1;
       }
     } else {
-      f = fopen(argv[i], "r");
+      FILE *f = fopen(argv[i], "r");
       if (!f) {
         perror("failed to open file");
         return 1;
       }
-      break; // for now we just allow for 1 file
+
+      num_files++;
+      files = realloc(files, num_files * sizeof(FILE *));
+      files[num_files - 1] = f;
     }
   }
 
-  numlines = readlines(f, alias_mode); // populate elms
+  if (num_files == 0) { // no files = read from stdin
+    files = realloc(files, sizeof(FILE *));
+    files[0] = stdin;
+  }
+
+  for (int i = 0; i < num_files; i++) {
+    numlines += readlines(files[i], alias_mode); // populate elms
+  }
+
   int numresults = numlines;
   struct elm *results = elms;
   int do_search = 0;
@@ -266,6 +277,9 @@ int main(int argc, char *argv[]) {
     }
 
     if (do_search) {
+      if (results) {
+        free(results);
+      }
       results = search(input, &numresults);
       do_search = 0;
       // back to start when we do a new search

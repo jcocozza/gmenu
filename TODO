@@ -1,5 +1,3 @@
 - implement a fuzzy search
-- read from more then 1 file at a time
-- add prompt (-p <prompt>) flag
 - exec flag?
     - run the "exec" command with the selected value passed in
