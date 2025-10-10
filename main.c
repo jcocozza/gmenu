@@ -101,20 +101,32 @@ typedef struct str_split {
 
 str_split_t *strsplit(char *s, char *delim) {
   str_split_t *ss = malloc(sizeof(str_split_t));
+  if (!ss)
+    return NULL;
+
   char *match = strstr(s, delim);
   if (!match) {
-    ss->first = s;
-    ss->second = s;
-    free(match);
+    ss->first = strdup(s);
+    ss->second =
+        strdup(""); // Or strdup(s) if you want both to be the whole string
     return ss;
   }
 
-  strncpy(ss->first, s, strlen(s) - strlen(match));
+  int first_size = match - s; // Pointer arithmetic is cleaner
+  ss->first = malloc(first_size + 1);
   if (!ss->first) {
-    free(ss->first);
-    return ss; // cry
+    free(ss);
+    return NULL;
   }
-  ss->second = match;
+  strncpy(ss->first, s, first_size);
+  ss->first[first_size] = '\0';
+
+  ss->second = strdup(match + strlen(delim)); // Skip delimiter
+  if (!ss->second) {
+    free(ss->first);
+    free(ss);
+    return NULL;
+  }
   return ss;
 }
 
@@ -124,8 +136,10 @@ void readfile(FILE *f, item_list_t *item_list) {
 
   while (fgets(line, sizeof(line), f)) {
     if (alias_mode) {
-      str_split_t *split = strsplit(line, " ");
+      str_split_t *split = strsplit(line, delim);
       add_item(item_list, split->first, split->second);
+      free(split->first);
+      free(split->second);
       free(split);
     } else {
       add_item(item_list, line, line);
@@ -182,10 +196,10 @@ void draw(int max_width, char *user_prompt, char *user_input,
   if (prompt_len != 0) {
     prompt_len += 2; // 2 for ": "
   }
-
+  // i am not 100% sure that this is an okay thing to do.
+  // it should probably be a heap allocation
   size_t final_size = prompt_len + strlen(user_input) + 1;
-  char final_prompt[final_size]; // i am not 100% sure that this is an okay
-                                 // thing to do
+  char final_prompt[final_size];
   if (prompt_len == 0) {
     snprintf(final_prompt, final_size, "%s", user_input);
   } else {
@@ -205,11 +219,10 @@ void draw(int max_width, char *user_prompt, char *user_input,
 
   while (rendered_results_width <= results_width && i < results->cnt) {
     char *display_text = results->matches[i]->alias;
-    // if (isspace(
-    //         display_text[0])) { // this is dumb. it doesn't do it's job for "
-    //         "
-    //   display_text = "<whitespace>";
-    // }
+    if (isspace(
+            display_text[0])) { // this is dumb. it doesn't do it's job for "  "
+      display_text = "<whitespace>";
+    }
 
     int display_text_width = MeasureText(display_text, FONT_SIZE);
     rendered_results_width += display_text_width + spacer_width;
@@ -278,6 +291,7 @@ int main(int argc, char *argv[]) {
     readfile(file_list->files[i], list);
     fclose(file_list->files[i]);
   }
+  free(file_list->files);
   free(file_list);
 
   SetConfigFlags(FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_TOPMOST);
@@ -309,7 +323,7 @@ int main(int argc, char *argv[]) {
     int key = GetCharPressed();
     while (key > 0) {
       if ((key >= 32) && (key <= 125)) {
-        if (strlen(input) < input_count) {
+        if (strlen(input) >= input_count) {
           input = realloc(input, strlen(input) + 256);
           if (!input) {
             perror("malloc");
