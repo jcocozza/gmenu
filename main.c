@@ -1,5 +1,5 @@
 #include "raylib.h"
-#include <_string.h>
+#include <string.h>
 #include <ctype.h>
 #include <stdatomic.h>
 #include <stddef.h>
