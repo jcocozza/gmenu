@@ -49,7 +49,7 @@ jobs:
       - name: Build Macos
         if: matrix.os == 'macos-latest'
         run: |
-          gcc -O2 -o gmenu main.c window_darwin.m -lraylib -lm -lpthread -ldl -framework Cocoa -framework IOKit -framework CoreVideo -framework OpenGL
+          gcc -O2 -o gmenu main.c window_darwin.m -I/opt/homebrew/opt/raylib/include -L/opt/homebrew/opt/raylib/lib -lraylib -lm -lpthread -ldl -framework Cocoa -framework IOKit -framework CoreVideo -framework OpenGL
         shell: bash
 
       - name: Build Windows (Windows)
