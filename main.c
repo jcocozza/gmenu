@@ -26,12 +26,13 @@ void usage_long() {
   printf("usage: gmenu [flags] [FILE]\n");
   printf("\n");
   printf("flags:\n");
-  printf("-a, --alias: use gmenu in alias mode\n");
   printf("-p, --prompt: include a prompt in the gui (default: \"%s\")\n",
          prompt);
+  printf("-a, --alias: use gmenu in alias mode. split each line on delim in "
+         "key, value. will show and return value\n");
   printf("-d, --delim: delim to split on. only affects alias mode. (default: "
          "\"%s\")\n",
-         prompt);
+         delim);
 }
 
 typedef struct file_list {
