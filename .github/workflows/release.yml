@@ -12,7 +12,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        # os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest]
 
     steps:
       - name: Checkout code
@@ -24,26 +25,26 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gcc make raylib
 
-      - name: Install dependencies (macOS)
-        if: matrix.os == 'macos-latest'
-        run: |
-          brew install gcc make raylib
+          # - name: Install dependencies (macOS)
+          #   if: matrix.os == 'macos-latest'
+          #   run: |
+          #     brew install gcc make raylib
 
-      - name: Install dependencies (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          choco install mingw make -y
-          refreshenv
+          # - name: Install dependencies (Windows)
+          #   if: matrix.os == 'windows-latest'
+          #   run: |
+          #     choco install mingw make -y
+          #     refreshenv
 
       - name: Build project (Linux & macOS)
         if: matrix.os != 'windows-latest'
         run: |
           gcc -flto -O3 -DNDEBUG -march=native main.c -lraylib -lGL -lm -lpthread -ldl -o gmenu
 
-      - name: Build project (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          gcc -O3 -DNDEBUG main.c -lraylib -lopengl32 -lgdi32 -lwinmm -lshell32 -o gmenu.exe
+          # - name: Build project (Windows)
+          #   if: matrix.os == 'windows-latest'
+          #   run: |
+          #     gcc -O3 -DNDEBUG main.c -lraylib -lopengl32 -lgdi32 -lwinmm -lshell32 -o gmenu.exe
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
