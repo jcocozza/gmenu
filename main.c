@@ -210,6 +210,18 @@ void free_results(search_results_t *results) {
   free(results);
 }
 
+int iswhitespace(char *s) {
+  if (!s) {
+    return 0;
+  }
+  for (int i = 0; i < strlen(s); i++) {
+    if (!isspace(s[i])) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
 const int FONT_SIZE = 10;
 void draw(int max_width, char *user_prompt, char *user_input,
           search_results_t *results, int result_offset, int selected_result) {
@@ -246,9 +258,7 @@ void draw(int max_width, char *user_prompt, char *user_input,
 
   while (rendered_results_width <= results_width && i < results->cnt) {
     char *display_text = results->matches[i]->alias;
-    if (isspace(display_text[0]) &&
-        strlen(display_text) ==
-            1) { // this is dumb. it doesn't do it's job for "  "
+    if (iswhitespace(display_text)) {
       display_text = "<whitespace>";
     }
 
@@ -292,7 +302,8 @@ int main(int argc, char *argv[]) {
       } else if (!strcmp(argv[i], "-d") || !strcmp(argv[i], "--delim")) {
         i++;
         delim = argv[i];
-      } else if (!strcmp(argv[i], "-i") || !strcmp(argv[i], "--no-ignore-case")) {
+      } else if (!strcmp(argv[i], "-i") ||
+                 !strcmp(argv[i], "--no-ignore-case")) {
         ignore_case = 0;
       } else { // undefined flags
         usage_long();
