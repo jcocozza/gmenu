@@ -1,4 +1,6 @@
 gmenu
+.clangd
+*.dSYM
 *.pprof
 *.prof
 *.out

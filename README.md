@@ -8,13 +8,16 @@ I haven't done a feature by feature copy over, but the essential feature, select
 
 I also added a niche, but perhaps useful "alias" mode that parses items just a little more intelligently.
 
+## Why?
 
-## (Known) Limitations
+[dmenu](https://tools.suckless.org/dmenu/) is very good, but unfortunately, some of the time I cannot be on linux.
+I also don't like when I can't use the same tool across multiple platforms. I want something that functions (and looks) the same regardless of where I use it.
+Moreover, I found some of the existing alternatives to dmenu a little too clunky.
 
-- Doesn't behave quite as expected when using i3, but still works
+## Uses
 
+1. Not using spotlight on Macos.
+If you use something like skhd:
+`cmd + shift - space : open -a "/Applications/$(ls /Applications | /path/to/gmenu)"`
 
-## Developement
-
-For profiling build the binary with `profile` tag: `go build -tags profile ./cmd/gmenu/`.
-
+In the future I may figure out how to package this up nicely so it's an actual app for macos.

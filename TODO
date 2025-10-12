@@ -1,4 +1,1 @@
-- implement a fuzzy search
-- add prompt (-p <prompt>) flag
-- exec flag?
-    - run the "exec" command with the selected value passed in
+- implement a fuzzy search (or at least case insensitive)

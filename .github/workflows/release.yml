@@ -1,84 +1,79 @@
-name: release
+name: build
 
 on:
   push:
-    tags:
-      - 'v*'
+    tags: [v*]
 
 permissions:
   contents: write
 
 jobs:
   build:
-    runs-on: ${{ matrix.runs-on }}
-
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        include:
-          - goos: linux
-            goarch: amd64
-            runs-on: ubuntu-latest
-          - goos: windows
-            goarch: amd64
-            runs-on: ubuntu-latest
-          - goos: darwin
-            goarch: amd64
-            runs-on: macos-14
-          - goos: darwin
-            goarch: arm64
-            runs-on: macos-14
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.24.3'
-
-      - name: Install Linux deps
-        if: matrix.goos == 'linux'
-        run: sudo apt-get update && sudo apt-get install -y libgl1-mesa-dev xorg-dev
-
-      - name: Install mingw-w64 for Windows builds
-        if: matrix.goos == 'windows'
-        run: sudo apt-get update && sudo apt-get install -y gcc-mingw-w64
-
-      - name: build vars
-        id: vars
+      - name: Install dependencies (Linux)
+        if: matrix.os == 'ubuntu-latest'
         run: |
-          echo "VERSION=${GITHUB_REF#refs/tags/}" >> "$GITHUB_ENV"
-          echo "COMMIT=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
-          echo "DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_ENV"
+          sudo apt update
+          sudo apt install -y build-essential cmake libgl1-mesa-dev libx11-dev libxcursor-dev libxrandr-dev libxi-dev libxinerama-dev
+          git clone https://github.com/raysan5/raylib.git
+          cd raylib/src && make PLATFORM=PLATFORM_DESKTOP && sudo make install
 
-      - name: Set file extension
+      - name: Install dependencies (macOS)
+        if: matrix.os == 'macos-latest'
         run: |
-          if [ "${{ matrix.goos }}" = "windows" ]; then
-            echo "EXT=.exe" >> "$GITHUB_ENV"
-          else
-            echo "EXT=" >> "$GITHUB_ENV"
+          brew update
+          brew install raylib
+
+      - name: Install dependencies (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          choco install make mingw -y
+          git clone https://github.com/raysan5/raylib.git
+          cd raylib/src && mingw32-make PLATFORM=PLATFORM_DESKTOP
+
+      - name: Install zip (Windows)
+        if: matrix.os == 'windows-latest'
+        run: choco install zip -y
+
+      - name: Build Linux
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          gcc -O2 -o gmenu main.c -lraylib -lm -lpthread -ldl
+        shell: bash
+
+      - name: Build Macos
+        if: matrix.os == 'macos-latest'
+        run: |
+          gcc -O2 -o gmenu main.c window_darwin.m -I/opt/homebrew/opt/raylib/include -L/opt/homebrew/opt/raylib/lib -lraylib -lm -lpthread -ldl -framework Cocoa -framework IOKit -framework CoreVideo -framework OpenGL
+        shell: bash
+
+      - name: Build Windows (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          gcc -O2 -o gmenu.exe main.c -Iraylib/src -Lraylib/src -lraylib -lopengl32 -lgdi32 -lwinmm -lshell32
+        shell: bash
+
+      # --- Zip binary ---
+      - name: Zip binary
+        shell: bash
+        run: |
+          EXT=""
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            EXT=".exe"
           fi
+          zip gmenu-${{ matrix.os }}${EXT}.zip gmenu${EXT}
 
-      - name: Build ${{ matrix.goos }}/${{ matrix.goarch }}
-        run: |
-          export GOOS=${{ matrix.goos }}
-          export GOARCH=${{ matrix.goarch }}
-          export CGO_ENABLED=1
-          BIN_NAME=gmenu-${GOOS}-${GOARCH}${EXT}
-
-          if [ "$GOOS" =  "windows" ]; then
-            export  CC=x86_64-w64-mingw32-gcc
-          fi
-          go build -v -o "$BIN_NAME" -ldflags "-X 'main.Version=${VERSION}' -X main.Commit=${COMMIT} -X main.Date=${DATE}" ./cmd/gmenu
-
-      - name: zip
-        run: |
-          BIN_NAME=gmenu-${{ matrix.goos }}-${{ matrix.goarch }}${EXT}
-          zip "${BIN_NAME}.zip" "${BIN_NAME}"
-
-
-      - name: Upload to release
+      # --- Upload to GitHub Release ---
+      - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: gmenu-*.zip
