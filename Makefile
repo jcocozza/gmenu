@@ -30,9 +30,8 @@ raylib-static:
 	    -I. -Iexternal -Iexternal/glfw/include
 	ar rcs libraylib.a $(RAYLIB_SRC)/*.o
 
-linux: raylib-static
-	gcc -O2 -flto -o $(OUT_LINUX) main.c \
-	    $(RAYLIB_INC) libraylib.a -lGL -lm -ldl -lpthread -lrt -lX11
+linux:
+	gcc -flto -O3 -DNDEBUG -march=native main.c -lraylib -lGL -lm -lpthread -ldl -o $(OUT_LINUX)
 
 windows: raylib-static
 	$(CC_WIN) -O2 -o $(OUT_WINDOWS) main.c \
