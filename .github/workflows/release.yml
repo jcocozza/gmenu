@@ -1,107 +1,84 @@
----
 name: release
+
 on:
   push:
-    tags: [v*]
+    tags:
+      - 'v*'
+
 permissions:
   contents: write
+
 jobs:
   build:
     strategy:
       matrix:
         include:
           - os: ubuntu-latest
+            target: linux
             platform: linux
             arch: amd64
-          - os: macos-14
-            platform: darwin
-            arch: amd64
-          - os: macos-14
-            platform: darwin
-            arch: arm64
+            ext: ""
           - os: ubuntu-latest
+            target: windows
             platform: windows
             arch: amd64
+            ext: ".exe"
+          - os: macos-14
+            target: macos-x86_64
+            platform: darwin
+            arch: amd64
+            ext: ""
+          - os: macos-14
+            target: macos-arm64
+            platform: darwin
+            arch: arm64
+            ext: ""
+
     runs-on: ${{ matrix.os }}
     name: Build ${{ matrix.platform }}-${{ matrix.arch }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Set environment vars
+
+      - name: Set environment variables
         id: vars
         run: |
           echo "VERSION=${GITHUB_REF#refs/tags/}" >> "$GITHUB_ENV"
           echo "COMMIT=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
           echo "DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_ENV"
-          echo "EXT=" >> "$GITHUB_ENV"
-          if [ "${{ matrix.platform }}" = "windows" ]; then
-            echo "EXT=.exe" >> "$GITHUB_ENV"
-          fi
 
-      # --- Linux Build ---
-      - name: Install Linux deps
-        if: matrix.platform == 'linux'
-        run: sudo apt update && sudo apt install -y build-essential zip libgl1-mesa-dev
-          xorg-dev
-      - name: Clone Raylib (Linux)
-        if: matrix.platform == 'linux'
-        run: |
-          git clone --depth=1 https://github.com/raysan5/raylib.git
-      - name: Build Raylib static lib (Linux)
-        if: matrix.platform == 'linux'
-        working-directory: ./raylib/src
-        run: |
-          gcc -DPLATFORM_DESKTOP -c rcore.c rshapes.c rtext.c rmodels.c rtextures.c raudio.c utils.c -I. -Iexternal -Iexternal/glfw/include
-          ar rcs ../../libraylib.a *.o
-      - name: Build on Linux
-        if: matrix.platform == 'linux'
-        run: |
-          gcc -O2 -flto -o gmenu-${{ matrix.platform }}-${{ matrix.arch }} \
-          main.c \
-          -Iraylib/src -Iraylib/src/external -Iraylib/src/external/glfw/include \
-          libraylib.a -lGL -lm -ldl -lpthread -lrt -lX11
-
-      # --- macOS Build ---
-      - name: Install macOS deps
-        if: matrix.platform == 'darwin'
-        run: brew install raylib
-      - name: Build macOS
-        if: matrix.platform == 'darwin'
-        run: |
-          make release
-          mv gmenu gmenu-${{ matrix.platform }}-${{ matrix.arch }}${EXT}
-
-      # --- Windows Build ---
-      - name: Install mingw and deps
-        if: matrix.platform == 'windows'
+      # Dependencies for Linux and Windows builds
+      - name: Install Linux/Windows dependencies
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt update
-          sudo apt install -y gcc-mingw-w64 zip make
-      - name: Clone Raylib
-        if: matrix.platform == 'windows'
-        run: |
-          git clone --depth=1 https://github.com/raysan5/raylib.git
-      - name: Build Raylib static lib (libraylib.a)
-        if: matrix.platform == 'windows'
-        working-directory: ./raylib/src
-        run: |
-          x86_64-w64-mingw32-gcc -c rcore.c rshapes.c rtext.c rmodels.c rtextures.c raudio.c utils.c \
-            -I. -Iexternal -Iexternal/glfw/include -DPLATFORM_DESKTOP
-          ar rcs ../../libraylib.a *.o
-      - name: Build your Windows app
-        if: matrix.platform == 'windows'
-        run: |
-          x86_64-w64-mingw32-gcc main.c -o gmenu-${{ matrix.platform }}-${{ matrix.arch }}.exe \
-            -Iraylib/src -Iraylib/src/external -Iraylib/src/external/glfw/include \
-            libraylib.a -lopengl32 -lgdi32 -lwinmm -lshell32
+          sudo apt install -y build-essential gcc-mingw-w64 zip libgl1-mesa-dev xorg-dev
 
-      # --- Zip binary ---
+      # Dependencies for macOS
+      - name: Install Raylib on macOS
+        if: startsWith(matrix.os, 'macos')
+        run: brew install raylib
+
+      # Clone raylib for Linux and Windows targets
+      - name: Clone raylib
+        if: matrix.target == 'linux' || matrix.target == 'windows'
+        run: git clone --depth=1 https://github.com/raysan5/raylib.git
+
+      # Build using the Makefile
+      - name: Build ${{ matrix.target }}
+        run: make ${{ matrix.target }}
+
+      # Rename the binary for packaging
+      - name: Rename binary
+        run: |
+          mv gmenu-${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.ext }} gmenu-${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.ext }}
+
       - name: Zip binary
         run: |
-          zip gmenu-${{ matrix.platform }}-${{ matrix.arch }}${EXT}.zip gmenu-${{ matrix.platform }}-${{ matrix.arch }}${EXT}
+          zip gmenu-${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.ext }}.zip gmenu-${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.ext }}
 
-      # --- Upload to GitHub Release ---
-      - name: Upload to GitHub Release
+      - name: Upload release artifacts
         uses: softprops/action-gh-release@v2
         with:
           files: gmenu-*.zip
