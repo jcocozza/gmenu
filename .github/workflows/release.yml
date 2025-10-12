@@ -60,8 +60,13 @@ jobs:
 
       # --- Zip binary ---
       - name: Zip binary
+        shell: bash
         run: |
-          zip gmenu-${{ matrix.platform }}-${{ matrix.arch }}${EXT}.zip gmenu-${{ matrix.platform }}-${{ matrix.arch }}${EXT}
+          EXT=""
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            EXT=".exe"
+          fi
+          zip gmenu-${{ matrix.os }}${EXT}.zip gmenu${EXT}
 
       # --- Upload to GitHub Release ---
       - name: Upload to GitHub Release
