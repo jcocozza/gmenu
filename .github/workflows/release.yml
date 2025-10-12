@@ -10,75 +10,96 @@ permissions:
 
 jobs:
   build:
-    runs-on: ${{ matrix.runs-on }}
-
     strategy:
       matrix:
         include:
-          - goos: linux
-            goarch: amd64
-            runs-on: ubuntu-latest
-          - goos: windows
-            goarch: amd64
-            runs-on: ubuntu-latest
-          - goos: darwin
-            goarch: amd64
-            runs-on: macos-14
-          - goos: darwin
-            goarch: arm64
-            runs-on: macos-14
+          - os: ubuntu-latest
+            platform: linux
+            arch: amd64
+          - os: macos-14
+            platform: darwin
+            arch: amd64
+          - os: macos-14
+            platform: darwin
+            arch: arm64
+          - os: ubuntu-latest
+            platform: windows
+            arch: amd64
+
+    runs-on: ${{ matrix.os }}
+    name: Build ${{ matrix.platform }}-${{ matrix.arch }}
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.24.3'
-
-      - name: Install Linux deps
-        if: matrix.goos == 'linux'
-        run: sudo apt-get update && sudo apt-get install -y libgl1-mesa-dev xorg-dev
-
-      - name: Install mingw-w64 for Windows builds
-        if: matrix.goos == 'windows'
-        run: sudo apt-get update && sudo apt-get install -y gcc-mingw-w64
-
-      - name: build vars
+      - name: Set environment vars
         id: vars
         run: |
           echo "VERSION=${GITHUB_REF#refs/tags/}" >> "$GITHUB_ENV"
           echo "COMMIT=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
           echo "DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_ENV"
-
-      - name: Set file extension
-        run: |
-          if [ "${{ matrix.goos }}" = "windows" ]; then
+          echo "EXT=" >> "$GITHUB_ENV"
+          if [ "${{ matrix.platform }}" = "windows" ]; then
             echo "EXT=.exe" >> "$GITHUB_ENV"
-          else
-            echo "EXT=" >> "$GITHUB_ENV"
           fi
 
-      - name: Build ${{ matrix.goos }}/${{ matrix.goarch }}
+      # --- Linux Build ---
+      - name: Install Linux deps
+        if: matrix.platform == 'linux'
+        run: sudo apt update && sudo apt install -y build-essential raylib-dev zip
+
+      - name: Build Linux
+        if: matrix.platform == 'linux'
         run: |
-          export GOOS=${{ matrix.goos }}
-          export GOARCH=${{ matrix.goarch }}
-          export CGO_ENABLED=1
-          BIN_NAME=gmenu-${GOOS}-${GOARCH}${EXT}
+          make linux
+          mv gmenu gmenu-${{ matrix.platform }}-${{ matrix.arch }}${EXT}
 
-          if [ "$GOOS" =  "windows" ]; then
-            export  CC=x86_64-w64-mingw32-gcc
-          fi
-          go build -v -o "$BIN_NAME" -ldflags "-X 'main.Version=${VERSION}' -X main.Commit=${COMMIT} -X main.Date=${DATE}" ./cmd/gmenu
+      # --- macOS Build ---
+      - name: Install macOS deps
+        if: matrix.platform == 'darwin'
+        run: brew install raylib
 
-      - name: zip
+      - name: Build macOS
+        if: matrix.platform == 'darwin'
         run: |
-          BIN_NAME=gmenu-${{ matrix.goos }}-${{ matrix.goarch }}${EXT}
-          zip "${BIN_NAME}.zip" "${BIN_NAME}"
+          make release
+          mv gmenu gmenu-${{ matrix.platform }}-${{ matrix.arch }}${EXT}
 
+      # --- Windows Build ---
+      - name: Install mingw and deps
+        if: matrix.platform == 'windows'
+        run: |
+          sudo apt update
+          sudo apt install -y gcc-mingw-w64 zip make
 
-      - name: Upload to release
+      - name: Clone Raylib
+        if: matrix.platform == 'windows'
+        run: |
+          git clone --depth=1 https://github.com/raysan5/raylib.git
+
+      - name: Build Raylib static lib (libraylib.a)
+        if: matrix.platform == 'windows'
+        working-directory: ./raylib/src
+        run: |
+          x86_64-w64-mingw32-gcc -c rcore.c rshapes.c rtext.c rmodels.c rtextures.c raudio.c utils.c \
+            -I. -Iexternal -Iexternal/glfw/include -DPLATFORM_DESKTOP
+          ar rcs ../../libraylib.a *.o
+
+      - name: Build your Windows app
+        if: matrix.platform == 'windows'
+        run: |
+          x86_64-w64-mingw32-gcc main.c -o gmenu-${{ matrix.platform }}-${{ matrix.arch }}.exe \
+            -Iraylib/src -Iraylib/src/external -Iraylib/src/external/glfw/include \
+            libraylib.a -lopengl32 -lgdi32 -lwinmm -lshell32
+
+      # --- Zip binary ---
+      - name: Zip binary
+        run: |
+          zip gmenu-${{ matrix.platform }}-${{ matrix.arch }}${EXT}.zip gmenu-${{ matrix.platform }}-${{ matrix.arch }}${EXT}
+
+      # --- Upload to GitHub Release ---
+      - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: gmenu-*.zip
