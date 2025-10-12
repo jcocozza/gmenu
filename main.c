@@ -1,13 +1,11 @@
+#include <_string.h>
 #define _POSIX_C_SOURCE 200809L
 
 #include "raylib.h"
 #include <ctype.h>
-#include <stdatomic.h>
-#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 #ifdef __APPLE__
 void setWindowBehavior(void *window);
@@ -17,6 +15,7 @@ void setWindowBehavior(void *window);
 int alias_mode = 0;
 char *prompt = "";
 char *delim = " ";
+int ignore_case = 1;
 
 FILE **files = NULL;
 
@@ -33,6 +32,7 @@ void usage_long() {
   printf("-d, --delim: delim to split on. only affects alias mode. (default: "
          "\"%s\")\n",
          delim);
+  printf("-i, --no-ignore-case: ignore case (default: true)");
 }
 
 typedef struct file_list {
@@ -154,6 +154,34 @@ typedef struct search_results {
   size_t cnt;
 } search_results_t;
 
+// 0 false
+// 1 true
+int match(char *s1, char *s2, int ignore_case) {
+  char *c1 = strdup(s1);
+  char *c2 = strdup(s2);
+  if (!c1 || !c2) {
+    free(c1);
+    free(c2);
+    return 0;
+  }
+  // always match if one is empty
+  if (!strcmp(s1, "") || !strcmp(s2, "")) {
+    return 1;
+  }
+  if (ignore_case) {
+    for (int i = 0; c1[i]; i++) {
+      c1[i] = tolower(c1[i]);
+    }
+    for (int i = 0; c2[i]; i++) {
+      c2[i] = tolower(c2[i]);
+    }
+  }
+  int res = strstr(c1, c2) != NULL;
+  free(c1);
+  free(c2);
+  return res;
+}
+
 search_results_t *search(item_list_t *list, char *term) {
   item_t **matches = malloc(list->cnt * sizeof(item_t *));
   if (!matches)
@@ -164,14 +192,10 @@ search_results_t *search(item_list_t *list, char *term) {
     free(matches);
     return NULL;
   }
-
   results->matches = matches;
   results->cnt = 0;
-
   for (size_t i = 0; i < list->cnt; i++) {
-    if (strstr(list->items[i].alias, term) != NULL ||
-        !strcmp(term,
-                "")) { // TODO: this "match" function can be way more advanced
+    if (match(list->items[i].alias, term, ignore_case)) {
       results->matches[results->cnt] = &list->items[i];
       results->cnt++;
     }
@@ -268,6 +292,8 @@ int main(int argc, char *argv[]) {
       } else if (!strcmp(argv[i], "-d") || !strcmp(argv[i], "--delim")) {
         i++;
         delim = argv[i];
+      } else if (!strcmp(argv[i], "-i") || !strcmp(argv[i], "--no-ignore-case")) {
+        ignore_case = 0;
       } else { // undefined flags
         usage_long();
         return 1;
