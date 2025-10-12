@@ -323,9 +323,6 @@ int main(int argc, char *argv[]) {
   int selected_result = 0;
   int result_offset = 0;
 
-  search_results_t *init_results = search(list, input);
-  draw(maxWidth, prompt, input, init_results, result_offset, selected_result);
-  free(init_results);
   while (!WindowShouldClose()) {
     // this is basically copied straight from
     // https://www.raylib.com/examples/text/loader.html?name=text_input_box
