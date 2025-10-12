@@ -41,7 +41,7 @@ jobs:
           cd raylib/src && mingw32-make PLATFORM=PLATFORM_DESKTOP
 
       - name: Build Linux
-        if: matrix.os != 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest'
         run: |
           gcc -O2 -o gmenu main.c -lraylib -lm -lpthread -ldl
         shell: bash
