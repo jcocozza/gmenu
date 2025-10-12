@@ -4,14 +4,16 @@ on:
   push:
     branches: [ feat/release ]
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # os: [ubuntu-latest, macos-latest, windows-latest]
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
       - name: Checkout repository
@@ -38,15 +40,33 @@ jobs:
           git clone https://github.com/raysan5/raylib.git
           cd raylib/src && mingw32-make PLATFORM=PLATFORM_DESKTOP
 
-      - name: Build project
-        if: matrix.os != 'windows-latest'
+      - name: Build Linux
+        if: matrix.os != 'ubuntu-latest'
         run: |
           gcc -O2 -o gmenu main.c -lraylib -lm -lpthread -ldl
         shell: bash
 
-      - name: Build project (Windows)
+      - name: Build Macos
+        if: matrix.os == 'macos-latest'
+        run: |
+          gcc -O2 -o gmenu main.c window_darwin.m -lraylib -lm -lpthread -ldl -framework Cocoa -framework IOKit -framework CoreVideo -framework OpenGL
+        shell: bash
+
+      - name: Build Windows (Windows)
         if: matrix.os == 'windows-latest'
         run: |
           gcc -O2 -o gmenu.exe main.c -Iraylib/src -Lraylib/src -lraylib -lopengl32 -lgdi32 -lwinmm -lshell32
         shell: bash
 
+      # --- Zip binary ---
+      - name: Zip binary
+        run: |
+          zip gmenu-${{ matrix.platform }}-${{ matrix.arch }}${EXT}.zip gmenu-${{ matrix.platform }}-${{ matrix.arch }}${EXT}
+
+      # --- Upload to GitHub Release ---
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: gmenu-*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
