@@ -1,8 +1,8 @@
-name: Build C Project (Raylib)
+name: build
 
 on:
   push:
-    branches: [ feat/release ]
+    tags: [v*]
 
 permissions:
   contents: write
