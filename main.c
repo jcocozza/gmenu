@@ -29,7 +29,7 @@ void usage_long() {
   printf("-p, --prompt: include a prompt in the gui (default: \"%s\")\n",
          prompt);
   printf("-a, --alias: use gmenu in alias mode. split each line on delim in "
-         "key, value. will show and return value\n");
+         "key, value. will show key and return value\n");
   printf("-d, --delim: delim to split on. only affects alias mode. (default: "
          "\"%s\")\n",
          delim);
