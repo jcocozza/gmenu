@@ -51,8 +51,7 @@ jobs:
         if: matrix.platform == 'linux'
         working-directory: ./raylib/src
         run: |
-          gcc -c rcore.c rshapes.c rtext.c rmodels.c rtextures.c raudio.c utils.c \
-          -I. -Iexternal -Iexternal/glfw/include -DPLATFORM_DESKTOP
+          gcc -DPLATFORM_DESKTOP -c rcore.c rshapes.c rtext.c rmodels.c rtextures.c raudio.c utils.c -I. -Iexternal -Iexternal/glfw/include
           ar rcs ../../libraylib.a *.o
       - name: Build on Linux
         if: matrix.platform == 'linux'
