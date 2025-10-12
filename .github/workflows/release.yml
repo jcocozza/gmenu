@@ -23,11 +23,11 @@ jobs:
             platform: windows
             arch: amd64
             ext: ".exe"
-          - os: macos-14
-            target: macos-x86_64
-            platform: darwin
-            arch: amd64
-            ext: ""
+              # - os: macos-14
+              #   target: macos-x86_64
+              #   platform: darwin
+              #   arch: amd64
+              #   ext: ""
           - os: macos-14
             target: macos-arm64
             platform: darwin
