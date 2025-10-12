@@ -1,5 +1,6 @@
+#define _POSIX_C_SOURCE 200809L
+
 #include "raylib.h"
-#include <string.h>
 #include <ctype.h>
 #include <stdatomic.h>
 #include <stddef.h>
@@ -167,8 +168,9 @@ search_results_t *search(item_list_t *list, char *term) {
   results->cnt = 0;
 
   for (size_t i = 0; i < list->cnt; i++) {
-    if (strstr(list->items[i].alias, term) !=
-        NULL) { // TODO: this "match" function can be way more advanced
+    if (strstr(list->items[i].alias, term) != NULL ||
+        !strcmp(term,
+                "")) { // TODO: this "match" function can be way more advanced
       results->matches[results->cnt] = &list->items[i];
       results->cnt++;
     }
@@ -219,8 +221,9 @@ void draw(int max_width, char *user_prompt, char *user_input,
 
   while (rendered_results_width <= results_width && i < results->cnt) {
     char *display_text = results->matches[i]->alias;
-    if (isspace(
-            display_text[0])) { // this is dumb. it doesn't do it's job for "  "
+    if (isspace(display_text[0]) &&
+        strlen(display_text) ==
+            1) { // this is dumb. it doesn't do it's job for "  "
       display_text = "<whitespace>";
     }
 
@@ -309,7 +312,9 @@ int main(int argc, char *argv[]) {
   SetWindowPosition(0, 0);
 
   // user input
-  char *input = malloc(256);
+  // note to self; if we had used malloc here, would have had to manuall set
+  // input[0] = '\0'
+  char *input = calloc(256, 1);
   int input_count = 0;
   if (!input) {
     perror("malloc");
@@ -317,6 +322,10 @@ int main(int argc, char *argv[]) {
   }
   int selected_result = 0;
   int result_offset = 0;
+
+  search_results_t *init_results = search(list, input);
+  draw(maxWidth, prompt, input, init_results, result_offset, selected_result);
+  free(init_results);
   while (!WindowShouldClose()) {
     // this is basically copied straight from
     // https://www.raylib.com/examples/text/loader.html?name=text_input_box
@@ -343,7 +352,6 @@ int main(int argc, char *argv[]) {
         input[input_count] = '\0';
       }
     }
-
     search_results_t *results = search(list, input);
     // back to start when we do a new search
     // selected_result = 0;
