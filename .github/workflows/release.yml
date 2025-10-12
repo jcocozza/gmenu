@@ -44,16 +44,32 @@ jobs:
             echo "EXT=.exe" >> "$GITHUB_ENV"
           fi
 
-      # --- Linux Build ---
-      - name: Install Linux deps
-        if: matrix.platform == 'linux'
-        run: sudo apt update && sudo apt install -y build-essential raylib-dev zip
+      	# --- Linux Build ---
+		- name: Install Linux deps
+		if: matrix.platform == 'linux'
+		run: sudo apt update && sudo apt install -y build-essential zip libgl1-mesa-dev xorg-dev
 
-      - name: Build Linux
-        if: matrix.platform == 'linux'
-        run: |
-          make linux
-          mv gmenu gmenu-${{ matrix.platform }}-${{ matrix.arch }}${EXT}
+		- name: Clone Raylib (Linux)
+		if: matrix.platform == 'linux'
+		run: |
+				git clone --depth=1 https://github.com/raysan5/raylib.git
+
+		- name: Build Raylib static lib (Linux)
+		if: matrix.platform == 'linux'
+		working-directory: ./raylib/src
+		run: |
+			gcc -c rcore.c rshapes.c rtext.c rmodels.c rtextures.c raudio.c utils.c \
+			-I. -Iexternal -Iexternal/glfw/include -DPLATFORM_DESKTOP
+			ar rcs ../../libraylib.a *.o
+
+		- name: Build on Linux
+		if: matrix.platform == 'linux'
+		run: |
+			gcc -O2 -flto -o gmenu-${{ matrix.platform }}-${{ matrix.arch }} \
+			main.c \
+			-Iraylib/src -Iraylib/src/external -Iraylib/src/external/glfw/include \
+			libraylib.a -lGL -lm -ldl -lpthread -lrt -lX11
+
 
       # --- macOS Build ---
       - name: Install macOS deps
