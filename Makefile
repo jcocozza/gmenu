@@ -21,7 +21,7 @@ clean:
 #
 # this assumes you have libraylib.a file and a clone of raylib in the root of gmenu.
 #
-# generate the libraylib.a file with: 
+# generate the libraylib.a file with:
 # 1. gcc -c src/rcore.c src/rglfw.c src/rshapes.c src/rtext.c src/rmodels.c src/rtextures.c src/raudio.c src/utils.c -I"src" -I"src/external" -I"src/external/glfw/include" -DPLATFORM_DESKTOP
 # 2. ar rcs libraylib.a rcore.o rglfw.o rshapes.o rtext.o rmodels.o rtextures.o raudio.o utils.o
 #
