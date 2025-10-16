@@ -216,7 +216,8 @@ int main(int argc, char *argv[]) {
     printf("key press: %d\n", kp.k);
     search_results_t *results = search(sc, list, input);
 
-    switch (kp.k) {
+    while (kp.k != KEY_NONE) {
+   	switch (kp.k) {
     case KEY_NONE:
       break;
     case KEY_OTHER:
@@ -266,7 +267,11 @@ int main(int argc, char *argv[]) {
     case KEY_ENTER:
       printf("%s", results->matches[selected_result]->value);
       return 0;
+    } 
+    	kp = get_key_press();
     }
+
+    
 
     draw(prompt, input, results, result_offset, selected_result);
     free_results(results);

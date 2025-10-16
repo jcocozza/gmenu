@@ -11,6 +11,7 @@ typedef enum key {
   KEY_LEFT,
   KEY_RIGHT,
   KEY_ENTER,
+  KEY_ESC
 } gmenu_key_t;
 
 typedef struct keypress {
