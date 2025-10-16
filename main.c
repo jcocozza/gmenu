@@ -1,15 +1,10 @@
-#define _POSIX_C_SOURCE 200809L
-
-#include "raylib.h"
-#include <ctype.h>
+#include "platform.h"
+#include "search.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef __APPLE__
-void setWindowBehavior(void *window);
-#endif
-
+const int FONT_SIZE = 10;
 // flags
 int alias_mode = 0;
 char *prompt = "";
@@ -49,17 +44,6 @@ int add_file(file_list_t *file_list, FILE *f) {
   file_list->cnt++;
   return 0;
 }
-
-typedef struct item {
-  char *alias;
-  char *value;
-} item_t;
-
-typedef struct item_list {
-  item_t *items;
-  size_t cnt;
-  size_t cap;
-} item_list_t;
 
 item_list_t *create_items(void) {
   item_list_t *list = malloc(sizeof(item_list_t));
@@ -148,133 +132,7 @@ void readfile(FILE *f, item_list_t *item_list) {
   }
 }
 
-typedef struct search_results {
-  item_t **matches;
-  size_t cnt;
-} search_results_t;
-
-// 0 false
-// 1 true
-int match(char *s1, char *s2, int ignore_case) {
-  char *c1 = strdup(s1);
-  char *c2 = strdup(s2);
-  if (!c1 || !c2) {
-    free(c1);
-    free(c2);
-    return 0;
-  }
-  // always match if one is empty
-  if (!strcmp(s1, "") || !strcmp(s2, "")) {
-    return 1;
-  }
-  if (ignore_case) {
-    for (int i = 0; c1[i]; i++) {
-      c1[i] = tolower(c1[i]);
-    }
-    for (int i = 0; c2[i]; i++) {
-      c2[i] = tolower(c2[i]);
-    }
-  }
-  int res = strstr(c1, c2) != NULL;
-  free(c1);
-  free(c2);
-  return res;
-}
-
-search_results_t *search(item_list_t *list, char *term) {
-  item_t **matches = malloc(list->cnt * sizeof(item_t *));
-  if (!matches)
-    return NULL;
-
-  search_results_t *results = malloc(sizeof(search_results_t));
-  if (!results) {
-    free(matches);
-    return NULL;
-  }
-  results->matches = matches;
-  results->cnt = 0;
-  for (size_t i = 0; i < list->cnt; i++) {
-    if (match(list->items[i].alias, term, ignore_case)) {
-      results->matches[results->cnt] = &list->items[i];
-      results->cnt++;
-    }
-  }
-  // shrink to total search results not size of entire search space
-  results->matches = realloc(results->matches, sizeof(item_t *) * results->cnt);
-  return results;
-}
-
-void free_results(search_results_t *results) {
-  free(results->matches);
-  free(results);
-}
-
-int iswhitespace(char *s) {
-  if (!s) {
-    return 0;
-  }
-  for (int i = 0; i < strlen(s); i++) {
-    if (!isspace(s[i])) {
-      return 0;
-    }
-  }
-  return 1;
-}
-
-const int FONT_SIZE = 10;
-void draw(int max_width, char *user_prompt, char *user_input,
-          search_results_t *results, int result_offset, int selected_result) {
-
-  // TODO: this should not be in the render loop
-  int spacer_width = MeasureText("  ", FONT_SIZE);
-  int max_input_size = max_width;
-  int min_input_size = .25 * max_input_size;
-
-  int prompt_len = strlen(user_prompt);
-  if (prompt_len != 0) {
-    prompt_len += 2; // 2 for ": "
-  }
-  // i am not 100% sure that this is an okay thing to do.
-  // it should probably be a heap allocation
-  size_t final_size = prompt_len + strlen(user_input) + 1;
-  char final_prompt[final_size];
-  if (prompt_len == 0) {
-    snprintf(final_prompt, final_size, "%s", user_input);
-  } else {
-    snprintf(final_prompt, final_size, "%s: %s", user_prompt, user_input);
-  }
-  DrawText(final_prompt, 10, 10, FONT_SIZE, BLACK);
-
-  int prompt_width = MeasureText(final_prompt, FONT_SIZE);
-  int results_width = max_width - prompt_width;
-  int rendered_results_width = 0;
-  int i = result_offset;
-  int offset = min_input_size;
-  if (prompt_width > min_input_size) {
-    offset = prompt_width;
-  }
-  offset += spacer_width;
-
-  while (rendered_results_width <= results_width && i < results->cnt) {
-    char *display_text = results->matches[i]->alias;
-    if (iswhitespace(display_text)) {
-      display_text = "<whitespace>";
-    }
-
-    int display_text_width = MeasureText(display_text, FONT_SIZE);
-    rendered_results_width += display_text_width + spacer_width;
-    if (i == selected_result) {
-      DrawText(display_text, offset, 10, FONT_SIZE, RED);
-    } else {
-      DrawText(display_text, offset, 10, FONT_SIZE, BLACK);
-    }
-    i++;
-    offset += display_text_width + spacer_width;
-  }
-}
-
 int main(int argc, char *argv[]) {
-  SetTraceLogLevel(LOG_NONE); // tell raylib to be quiet
   item_list_t *list = create_items();
   file_list_t *file_list = malloc(sizeof(file_list_t *));
   if (!file_list) {
@@ -334,19 +192,8 @@ int main(int argc, char *argv[]) {
   free(file_list->files);
   free(file_list);
 
-  SetConfigFlags(FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_TOPMOST);
-  InitWindow(100, 100, "Init");
-#ifdef __APPLE__
-  void *window = GetWindowHandle();
-  setWindowBehavior(window);
-#endif
-
-  int monitor = GetCurrentMonitor();
-  int width = GetMonitorWidth(monitor);
-  const int maxWidth = width - 20;
-  int height = 30;
-  SetWindowSize(width, height);
-  SetWindowPosition(0, 0);
+  // search config
+  search_config_t sc = {.ignore_case = ignore_case};
 
   // user input
   // note to self; if we had used malloc here, would have had to manuall set
@@ -360,47 +207,40 @@ int main(int argc, char *argv[]) {
   int selected_result = 0;
   int result_offset = 0;
 
-  while (!WindowShouldClose()) {
+  while (!should_close()) {
     // this is basically copied straight from
     // https://www.raylib.com/examples/text/loader.html?name=text_input_box
-    int key = GetCharPressed();
-    while (key > 0) {
-      if ((key >= 32) && (key <= 125)) {
-        if (strlen(input) >= input_count) {
-          input = realloc(input, strlen(input) + 256);
-          if (!input) {
-            perror("malloc");
-            exit(1);
-          }
-        }
+    gmenu_keypress_t kp = get_key_press();
+    printf("key press: %d\n", kp.k);
+    search_results_t *results = search(sc, list, input);
 
-        input[input_count] = (char)key;
-        input[input_count + 1] = '\0';
-        input_count++;
+    switch (kp.k) {
+    case KEY_NONE:
+      break;
+    case KEY_OTHER:
+      break;
+    case KEY_CHAR:
+      if (strlen(input) >= input_count) {
+        input = realloc(input, strlen(input) + 256);
+        if (!input) {
+          perror("malloc");
+          exit(1);
+        }
       }
-      key = GetCharPressed();
-    }
-    if (IsKeyPressed(KEY_BACKSPACE)) {
+      input[input_count] = kp.c;
+      input[input_count + 1] = '\0';
+      input_count++;
+      break;
+    case KEY_BACKSPACE:
       if (input_count > 0) {
         input_count--;
         input[input_count] = '\0';
       }
-    }
-    search_results_t *results = search(list, input);
-    // back to start when we do a new search
-    // selected_result = 0;
-    // result_offset = 0;
-
-    if (IsKeyPressed(KEY_RIGHT) && results->cnt != 0) {
-      if (result_offset < results->cnt - 1) {
-        result_offset++;
-        selected_result++;
-      } else { // back to beginning
-        result_offset = 0;
-        selected_result = 0;
-      }
-    }
-    if (IsKeyPressed(KEY_LEFT) && results->cnt != 0) {
+      break;
+    case KEY_LEFT:
+      if (results->cnt == 0) {
+        break;
+      };
       if (result_offset > 0) {
         result_offset--;
         selected_result--;
@@ -408,19 +248,27 @@ int main(int argc, char *argv[]) {
         result_offset = results->cnt - 1;
         selected_result = results->cnt - 1;
       }
-    }
-
-    if (IsKeyPressed(KEY_ENTER)) {
+      break;
+    case KEY_RIGHT:
+      if (results->cnt == 0) {
+        break;
+      };
+      if (result_offset < results->cnt - 1) {
+        result_offset++;
+        selected_result++;
+      } else { // back to beginning
+        result_offset = 0;
+        selected_result = 0;
+      }
+      break;
+    case KEY_ENTER:
       printf("%s", results->matches[selected_result]->value);
       return 0;
     }
 
-    BeginDrawing();
-    ClearBackground(RAYWHITE);
-    draw(maxWidth, prompt, input, results, result_offset, selected_result);
-    EndDrawing();
+    draw(prompt, input, results, result_offset, selected_result);
     free_results(results);
   }
-  CloseWindow();
+  teardown();
   return 0;
 }
