@@ -8,6 +8,26 @@ static int done = 0;
 
 static gmenu_keypress_t last_key = {KEY_NONE, 0};
 
+int main(int argc, char **argv);
+
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) {
+    // Attach to the parent console, if this was launched from cmd/powershell
+    if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+        FILE *fp;
+        freopen_s(&fp, "CONOUT$", "w", stdout);
+        freopen_s(&fp, "CONOUT$", "w", stderr);
+    }
+
+    // Convert lpCmdLine to argc/argv if needed
+    int argc = __argc;
+    char **argv = __argv;
+
+    // Call your normal main function
+    int result = main(argc, argv);
+
+    return result;
+}
+
 // Forward declarations
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -90,8 +110,8 @@ void draw(char *user_prompt, char *user_input, search_results_t *results, int re
     TextOutA(hdc, 10, 30, user_input, (int)strlen(user_input));
 
     // Draw search results
-    if (results && results->count > 0) {
-        for (int i = 0; i < results->count; i++) {
+    if (results && results->cnt> 0) {
+        for (int i = 0; i < results->cnt; i++) {
             int y = 60 + i * 20;
             if (i == selected_result) {
                 HBRUSH selBrush = CreateSolidBrush(RGB(200, 200, 255));
@@ -99,7 +119,7 @@ void draw(char *user_prompt, char *user_input, search_results_t *results, int re
                 FillRect(hdc, &selRect, selBrush);
                 DeleteObject(selBrush);
             }
-            TextOutA(hdc, 10, y, results->items[i].value, (int)strlen(results->items[i].value));
+            TextOutA(hdc, 10, y, results->matches[i]->value, (int)strlen(results->matches[i]->value));
         }
     }
 

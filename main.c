@@ -133,6 +133,7 @@ void readfile(FILE *f, item_list_t *item_list) {
 }
 
 int main(int argc, char *argv[]) {
+  init();
   item_list_t *list = create_items();
   file_list_t *file_list = malloc(sizeof(file_list_t *));
   if (!file_list) {
@@ -206,6 +207,7 @@ int main(int argc, char *argv[]) {
   }
   int selected_result = 0;
   int result_offset = 0;
+
 
   while (!should_close()) {
     // this is basically copied straight from
