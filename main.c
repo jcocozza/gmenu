@@ -165,7 +165,7 @@ void draw(char *user_prompt, char *user_input, search_results_t *results, int re
 	} else {
     		snprintf(final_prompt, final_size, "%s: %s", user_prompt, user_input);
 	}
-	draw_text(final_prompt, 10, 10);
+	draw_text(final_prompt, 10, 10, GMENU_BLACK);
 
 	int prompt_width = text_width(final_prompt);
 	int results_width = max_width - prompt_width;
@@ -186,9 +186,9 @@ void draw(char *user_prompt, char *user_input, search_results_t *results, int re
 		int display_text_width = text_width(display_text);
 		rendered_results_width += display_text_width + spacer_width;
 		if (i == selected_result) {
-			draw_text(display_text, offset, 10);
+			draw_text(display_text, offset, 10, GMENU_RED);
 		} else {
-			draw_text(display_text, offset, 10);
+			draw_text(display_text, offset, 10, GMENU_BLACK);
 		}
 		i++;
 		offset += display_text_width +  spacer_width;
@@ -279,11 +279,12 @@ int main(int argc, char *argv[]) {
     search_results_t *results = search(sc, list, input);
 
     if (redraw) {
+	    begin_draw();
 	    clear_screen();
 	    draw(prompt, input, results, result_offset, selected_result);
 	    free_results(results);
-	    //draw_text(input, 0,0);
 	    redraw = 0;
+	    end_draw();
     }
 
     while (kp.k != KEY_NONE) {

@@ -103,17 +103,37 @@ int screen_width() {
     return GetSystemMetrics(SM_CXSCREEN);
 }
 
-void draw_text(char *txt, int x, int y) {
-    	HDC hdc = GetDC(hwnd);
+// populated and released by begin and end draw
+HDC hdc;
+void begin_draw() {
+    hdc = GetDC(hwnd);
+}
+
+void end_draw() {
+    ReleaseDC(hwnd, hdc);
+}
+
+// TODO: figure out how to do the coloring properly
+void draw_text(char *txt, int x, int y, gmenu_color_t c) {
+	if (hdc == NULL) { return; }
+	COLORREF old_color; 
+	int old_bk_mode = SetBkMode(hdc, TRANSPARENT);
+	switch (c) {
+		case GMENU_RED:	 
+			old_color = SetTextColor(hdc, RGB(255, 0, 0)); 
+			break;
+		case GMENU_BLACK: 
+			old_color = SetTextColor(hdc, RGB(0, 0, 0)); 
+			break;
+	}
 	TextOutA(hdc, x, y, txt, strlen(txt));
 }
 
 void clear_screen() {
-    HDC hdc = GetDC(hwnd);
+    if (hdc == NULL) { return; }
     RECT rect;
     GetClientRect(hwnd, &rect);
     HBRUSH brush = CreateSolidBrush(RGB(255,255,255));
     FillRect(hdc, &rect, brush);
     DeleteObject(brush);
-    ReleaseDC(hwnd, hdc);
 }

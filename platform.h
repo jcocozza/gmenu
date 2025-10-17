@@ -19,6 +19,11 @@ typedef struct keypress {
   char c;
 } gmenu_keypress_t;
 
+typedef enum color {
+  GMENU_RED,
+  GMENU_BLACK
+} gmenu_color_t;
+
 // start up
 void init();
 // tear down
@@ -31,10 +36,12 @@ gmenu_keypress_t get_key_press();
 int text_width(char *txt);
 // width of the screen that is displaying the tool
 int screen_width();
+
+// indicate that we are starting to draw for current frame
+void begin_draw();
+// indicate done drawing for current frame
+void end_draw();
 // draw text at x, y
-void draw_text(char *txt, int x, int y);
+void draw_text(char *txt, int x, int y, gmenu_color_t c);
 // clear screen
 void clear_screen();
-
-// draw results
-//void draw(char *user_prompt, char *user_input, search_results_t *results, int result_offset, int selected_result);
