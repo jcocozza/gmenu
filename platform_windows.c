@@ -97,6 +97,10 @@ int text_width(char *txt) {
 	return size.cx;
 }
 
+int screen_width() {
+    return GetSystemMetrics(SM_CXSCREEN);
+}
+
 void draw_text(char *txt, int x, int y) {
     	HDC hdc = GetDC(hwnd);
 	TextOutA(hdc, x, y, txt, strlen(txt));

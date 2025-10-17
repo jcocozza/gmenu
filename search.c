@@ -5,17 +5,6 @@
 #include "search.h"
 
 // search methods
-int iswhitespace(char *s) {
-  if (!s) {
-    return 0;
-  }
-  for (int i = 0; i < strlen(s); i++) {
-    if (!isspace(s[i])) {
-      return 0;
-    }
-  }
-  return 1;
-}
 
 // 0 false
 // 1 true

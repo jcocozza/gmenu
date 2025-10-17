@@ -29,6 +29,8 @@ int should_close();
 gmenu_keypress_t get_key_press();
 // width of text in pixels
 int text_width(char *txt);
+// width of the screen that is displaying the tool
+int screen_width();
 // draw text at x, y
 void draw_text(char *txt, int x, int y);
 

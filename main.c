@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 const int FONT_SIZE = 10;
 // flags
@@ -130,6 +131,65 @@ void readfile(FILE *f, item_list_t *item_list) {
       add_item(item_list, line, line);
     }
   }
+}
+
+int iswhitespace(char *s) {
+  if (!s) {
+    return 0;
+  }
+  for (int i = 0; i < strlen(s); i++) {
+    if (!isspace(s[i])) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+void draw(char *user_prompt, char *user_input, search_results_t *results, int result_offset, int selected_result) {
+	int max_width = screen_width();
+	int max_input_size = max_width;
+	int min_input_size = .25 * max_input_size;
+
+	int prompt_len = strlen(user_prompt);
+	if (prompt_len != 0) {
+		prompt_len += 2; // 2 for ": "
+	}
+
+	size_t final_size = prompt_len + strlen(user_input) + 1;
+	char final_prompt[final_size];
+	if (prompt_len == 0) {
+    		snprintf(final_prompt, final_size, "%s", user_input);
+	} else {
+    		snprintf(final_prompt, final_size, "%s: %s", user_prompt, user_input);
+	}
+	draw_text(final_prompt, 10, 10);
+
+	int prompt_width = text_width(final_prompt);
+	int results_width = max_width - prompt_width;
+	int rendered_results_width = 0;
+	int i = result_offset;
+	int offset = min_input_size;
+	if (prompt_width > min_input_size) {
+		offset = prompt_width;	
+	}
+	//offset += spacer_width;
+	//
+	while (rendered_results_width <= results_width && i < results->cnt) {
+		char *display_text = results->matches[i]->alias;
+		if (iswhitespace(display_text)) {
+			display_text = "<whitespace>";
+		}
+
+		int display_text_width = text_width(display_text);
+		rendered_results_width += display_text_width; //+ spacer_width
+		if (i == selected_result) {
+			draw_text(display_text, offset, 10);
+		} else {
+			draw_text(display_text, offset, 10);
+		}
+		i++;
+		offset += display_text_width; //+ spacer_width
+	}
 }
 
 int main(int argc, char *argv[]) {
@@ -279,9 +339,9 @@ int main(int argc, char *argv[]) {
     
 
     if (redraw) {
-	    //draw(prompt, input, results, result_offset, selected_result);
-	    //free_results(results);
-	    draw_text(input, 0,0);
+	    draw(prompt, input, results, result_offset, selected_result);
+	    free_results(results);
+	    //draw_text(input, 0,0);
 	    redraw = 0;
     }
   }
