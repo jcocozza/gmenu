@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "platform.h"
 
+static int height = 30;
 static HWND hwnd = NULL;
 static HINSTANCE h_instance_global = NULL;
 static gmenu_keypress_t last_kp = {0}; // this will be updated to reflect the last keypress
@@ -50,10 +51,12 @@ void init() {
 
     if (!RegisterClass(&wc)) return;
 
+    int screen_width  = GetSystemMetrics(SM_CXSCREEN);
+
     hwnd = CreateWindowEx(
         WS_EX_TOPMOST | WS_EX_LAYERED | WS_EX_TOOLWINDOW,
         CLASS_NAME, "Overlay",
-        WS_POPUP, 100, 100, 400, 200,
+        WS_POPUP, 0, 0, screen_width, height,
         NULL, NULL, h_instance_global, NULL
     );
 
@@ -74,18 +77,6 @@ int should_close() {
     return close;
 }
 
-#define KEY_COUNT 256
-
-int is_key_pressed_once(int vk) {
-    static bool prev_state[KEY_COUNT] = {0};
-    SHORT state = GetAsyncKeyState(vk);
-    bool pressed_now = (state & 0x8000) != 0;
-
-    bool pressed_once = pressed_now && !prev_state[vk];
-    prev_state[vk] = pressed_now;
-    return pressed_once;
-}
-
 gmenu_keypress_t get_key_press() {
     MSG msg;
     while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -99,27 +90,14 @@ gmenu_keypress_t get_key_press() {
     return kp;
 }
 
+int text_width(char *txt) {
+    	HDC hdc = GetDC(hwnd);
+	SIZE size;
+	GetTextExtentPoint32A(hdc, txt, strlen(txt), &size);
+	return size.cx;
+}
 
-void draw(char *user_prompt, char *user_input, search_results_t *results, int result_offset, int selected_result) {
-    if (!hwnd) {
-        return;
-    }
-    HDC hdc = GetDC(hwnd);
-
-    // clear before actual draw
-    RECT client;
-    GetClientRect(hwnd, &client);
-    FillRect(hdc, &client, (HBRUSH)GetStockObject(WHITE_BRUSH));
-
-    RECT rect = {50, 50, 300, 150};
-    HPEN pen = CreatePen(PS_SOLID, 2, RGB(0,0,0));
-    HGDIOBJ old_pen = SelectObject(hdc, pen);
-
-    SetBkMode(hdc, TRANSPARENT);
-    SetTextColor(hdc, RGB(0,0,0));
-    DrawTextA(hdc, user_input, -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-    SelectObject(hdc, old_pen);
-    DeleteObject(pen);
-    ReleaseDC(hwnd, hdc);
+void draw_text(char *txt, int x, int y) {
+    	HDC hdc = GetDC(hwnd);
+	TextOutA(hdc, x, y, txt, strlen(txt));
 }

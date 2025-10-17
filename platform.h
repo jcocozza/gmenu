@@ -25,9 +25,12 @@ void init();
 void teardown();
 // return 1 when the app is done
 int should_close();
-
 // return key pressed by user (only the ones we care about)
 gmenu_keypress_t get_key_press();
+// width of text in pixels
+int text_width(char *txt);
+// draw text at x, y
+void draw_text(char *txt, int x, int y);
 
 // draw results
-void draw(char *user_prompt, char *user_input, search_results_t *results, int result_offset, int selected_result);
+//void draw(char *user_prompt, char *user_input, search_results_t *results, int result_offset, int selected_result);

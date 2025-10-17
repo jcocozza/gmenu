@@ -279,8 +279,9 @@ int main(int argc, char *argv[]) {
     
 
     if (redraw) {
-	    draw(prompt, input, results, result_offset, selected_result);
-	    free_results(results);
+	    //draw(prompt, input, results, result_offset, selected_result);
+	    //free_results(results);
+	    draw_text(input, 0,0);
 	    redraw = 0;
     }
   }
