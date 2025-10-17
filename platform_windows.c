@@ -16,17 +16,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param) {
             PostQuitMessage(0);
             return 0;
 	case WM_CHAR: {
-            last_kp.k = KEY_CHAR;
-            last_kp.c = (char)w_param; // ASCII only; (note: this can be extended to wchar_t in future?)
-            break;
+		char ch = (char)w_param;
+    		if (ch >= 32 && ch <= 126) { // printable ASCII
+        		last_kp.k = KEY_CHAR;
+        		last_kp.c = ch;
+    		}
+    		break;
         }
-
         case WM_KEYDOWN: {
-            // Non-character keys (arrows, enter, esc, etc.)
             switch (w_param) {
                 case VK_LEFT:   last_kp.k = KEY_LEFT;   break;
                 case VK_RIGHT:  last_kp.k = KEY_RIGHT;  break;
                 case VK_RETURN: last_kp.k = KEY_ENTER;  break;
+                case VK_BACK: last_kp.k = KEY_BACKSPACE;  break;
                 case VK_ESCAPE: last_kp.k = KEY_ESC; close = 1; break;
                 default: break;
             }
@@ -104,4 +106,14 @@ int screen_width() {
 void draw_text(char *txt, int x, int y) {
     	HDC hdc = GetDC(hwnd);
 	TextOutA(hdc, x, y, txt, strlen(txt));
+}
+
+void clear_screen() {
+    HDC hdc = GetDC(hwnd);
+    RECT rect;
+    GetClientRect(hwnd, &rect);
+    HBRUSH brush = CreateSolidBrush(RGB(255,255,255));
+    FillRect(hdc, &rect, brush);
+    DeleteObject(brush);
+    ReleaseDC(hwnd, hdc);
 }

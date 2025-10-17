@@ -1,3 +1,5 @@
+- darwin implementation
 - clean up makefile and actions script (actions should do the setup, and just call make for building)
-- implement a fuzzy search (or at least case insensitive)
 
+possible future:
+- fuzzy search

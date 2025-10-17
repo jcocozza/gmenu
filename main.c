@@ -262,88 +262,89 @@ int main(int argc, char *argv[]) {
   char *input = calloc(256, 1);
   int input_count = 0;
   if (!input) {
-    perror("malloc");
+    perror("calloc");
     exit(1);
   }
   int selected_result = 0;
   int result_offset = 0;
 
 
-  int redraw = 0;
+  int redraw = 1;
   while (!should_close()) {
-    // this is basically copied straight from
-    // https://www.raylib.com/examples/text/loader.html?name=text_input_box
     gmenu_keypress_t kp = get_key_press();
-    printf("key press: %d\n", kp.k);
+    // printf("key press: %d\n", kp.k);
     search_results_t *results = search(sc, list, input);
 
-    while (kp.k != KEY_NONE) {
-   	switch (kp.k) {
-    case KEY_NONE:
-      break;
-    case KEY_OTHER:
-      break;
-    case KEY_CHAR:
-      redraw = 1;
-      if (strlen(input) >= input_count) {
-        input = realloc(input, strlen(input) + 256);
-        if (!input) {
-          perror("malloc");
-          exit(1);
-        }
-      }
-      input[input_count] = kp.c;
-      input[input_count + 1] = '\0';
-      input_count++;
-      break;
-    case KEY_BACKSPACE:
-      redraw = 1;
-      if (input_count > 0) {
-        input_count--;
-        input[input_count] = '\0';
-      }
-      break;
-    case KEY_LEFT:
-      redraw = 1;
-      if (results->cnt == 0) {
-        break;
-      };
-      if (result_offset > 0) {
-        result_offset--;
-        selected_result--;
-      } else if (result_offset <= 0) { // to end
-        result_offset = results->cnt - 1;
-        selected_result = results->cnt - 1;
-      }
-      break;
-    case KEY_RIGHT:
-      redraw = 1;
-      if (results->cnt == 0) {
-        break;
-      };
-      if (result_offset < results->cnt - 1) {
-        result_offset++;
-        selected_result++;
-      } else { // back to beginning
-        result_offset = 0;
-        selected_result = 0;
-      }
-      break;
-    case KEY_ENTER:
-      printf("%s", results->matches[selected_result]->value);
-      return 0;
-    } 
-    	kp = get_key_press();
-    }
-
-    
-
     if (redraw) {
+	    clear_screen();
 	    draw(prompt, input, results, result_offset, selected_result);
 	    free_results(results);
 	    //draw_text(input, 0,0);
 	    redraw = 0;
     }
+
+    while (kp.k != KEY_NONE) {
+   	switch (kp.k) {
+	    case KEY_NONE:
+	      break;
+	    case KEY_OTHER:
+	      break;
+	    case KEY_CHAR:
+	      redraw = 1;
+	      if (strlen(input) >= input_count) {
+		input = realloc(input, strlen(input) + 256);
+		if (!input) {
+		  perror("realloc");
+		  exit(1);
+		}
+	      }
+	      input[input_count] = kp.c;
+	      input[input_count + 1] = '\0';
+	      input_count++;
+	      break;
+	    case KEY_BACKSPACE:
+	      redraw = 1;
+	      if (input_count > 0) {
+		input_count--;
+		input[input_count] = '\0';
+	      }
+	      break;
+	    case KEY_LEFT:
+	      redraw = 1;
+	      if (results->cnt == 0) {
+		break;
+	      };
+	      if (result_offset > 0) {
+		result_offset--;
+		selected_result--;
+	      } else if (result_offset <= 0) { // to end
+		result_offset = results->cnt - 1;
+		selected_result = results->cnt - 1;
+	      }
+	      break;
+	    case KEY_RIGHT:
+	      redraw = 1;
+	      if (results->cnt == 0) {
+		break;
+	      };
+	      if (result_offset < results->cnt - 1) {
+		result_offset++;
+		selected_result++;
+	      } else { // back to beginning
+		result_offset = 0;
+		selected_result = 0;
+	      }
+	      break;
+	    case KEY_ENTER:
+	      printf("%s", results->matches[selected_result]->value);
+	      teardown();
+	      return 0;
+    	} 
+    	kp = get_key_press();
+    }
+
+    
+
   }
   teardown();
   return 0;
