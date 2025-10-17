@@ -4,6 +4,8 @@
 
 static HWND hwnd = NULL;
 static HINSTANCE h_instance_global = NULL;
+static gmenu_keypress_t last_kp = {0}; // this will be updated to reflect the last keypress
+int close = 0;
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param);
 
@@ -12,6 +14,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param) {
         case WM_DESTROY:
             PostQuitMessage(0);
             return 0;
+	case WM_CHAR: {
+            last_kp.k = KEY_CHAR;
+            last_kp.c = (char)w_param; // ASCII only; (note: this can be extended to wchar_t in future?)
+            break;
+        }
+
+        case WM_KEYDOWN: {
+            // Non-character keys (arrows, enter, esc, etc.)
+            switch (w_param) {
+                case VK_LEFT:   last_kp.k = KEY_LEFT;   break;
+                case VK_RIGHT:  last_kp.k = KEY_RIGHT;  break;
+                case VK_RETURN: last_kp.k = KEY_ENTER;  break;
+                case VK_ESCAPE: last_kp.k = KEY_ESC; close = 1; break;
+                default: break;
+            }
+            break;
+        }
     }
     return DefWindowProc(hwnd, msg, w_param, l_param);
 }
@@ -52,7 +71,7 @@ void teardown() {
 }
 
 int should_close() {
-    return 0;
+    return close;
 }
 
 #define KEY_COUNT 256
@@ -68,56 +87,39 @@ int is_key_pressed_once(int vk) {
 }
 
 gmenu_keypress_t get_key_press() {
-    gmenu_keypress_t kp = {};
-
-    if (is_key_pressed_once(VK_LEFT))
-        kp.k = KEY_LEFT;
-    else if (is_key_pressed_once(VK_RIGHT))
-        kp.k = KEY_RIGHT;
-    else if (is_key_pressed_once(VK_RETURN))
-        kp.k = KEY_ENTER;
-    else if (is_key_pressed_once(VK_ESCAPE))
-        kp.k = KEY_ESC;
-    else {
-        for (int c = 'A'; c <= 'Z'; c++) {
-            if (is_key_pressed_once(c)) {
-                kp.k = KEY_CHAR;
-                kp.c = (char)c;
-                break;
-            }
-        }
-        for (int c = '0'; c <= '9'; c++) {
-            if (is_key_pressed_once(c)) {
-                kp.k = KEY_CHAR;
-                kp.c = (char)c;
-                break;
-            }
-        }
+    MSG msg;
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
     }
 
+    gmenu_keypress_t kp = last_kp;
+    last_kp.k = KEY_NONE;
+    last_kp.c = 0;
     return kp;
 }
+
 
 void draw(char *user_prompt, char *user_input, search_results_t *results, int result_offset, int selected_result) {
     if (!hwnd) {
         return;
     }
     HDC hdc = GetDC(hwnd);
-    RECT rect = {50, 50, 300, 150};
-    // HBRUSH brush = CreateSolidBrush(RGB(255,255,200));
-    HPEN pen = CreatePen(PS_SOLID, 2, RGB(0,0,0));
-    // HGDIOBJ old_brush = SelectObject(hdc, brush);
-    HGDIOBJ old_pen = SelectObject(hdc, pen);
 
-    //Rectangle(hdc, rect.left, rect.top, rect.right, rect.bottom);
+    // clear before actual draw
+    RECT client;
+    GetClientRect(hwnd, &client);
+    FillRect(hdc, &client, (HBRUSH)GetStockObject(WHITE_BRUSH));
+
+    RECT rect = {50, 50, 300, 150};
+    HPEN pen = CreatePen(PS_SOLID, 2, RGB(0,0,0));
+    HGDIOBJ old_pen = SelectObject(hdc, pen);
 
     SetBkMode(hdc, TRANSPARENT);
     SetTextColor(hdc, RGB(0,0,0));
     DrawTextA(hdc, user_input, -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-    // SelectObject(hdc, old_brush);
     SelectObject(hdc, old_pen);
-    // DeleteObject(brush);
     DeleteObject(pen);
     ReleaseDC(hwnd, hdc);
 }

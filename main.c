@@ -209,6 +209,7 @@ int main(int argc, char *argv[]) {
   int result_offset = 0;
 
 
+  int redraw = 0;
   while (!should_close()) {
     // this is basically copied straight from
     // https://www.raylib.com/examples/text/loader.html?name=text_input_box
@@ -223,6 +224,7 @@ int main(int argc, char *argv[]) {
     case KEY_OTHER:
       break;
     case KEY_CHAR:
+      redraw = 1;
       if (strlen(input) >= input_count) {
         input = realloc(input, strlen(input) + 256);
         if (!input) {
@@ -235,12 +237,14 @@ int main(int argc, char *argv[]) {
       input_count++;
       break;
     case KEY_BACKSPACE:
+      redraw = 1;
       if (input_count > 0) {
         input_count--;
         input[input_count] = '\0';
       }
       break;
     case KEY_LEFT:
+      redraw = 1;
       if (results->cnt == 0) {
         break;
       };
@@ -253,6 +257,7 @@ int main(int argc, char *argv[]) {
       }
       break;
     case KEY_RIGHT:
+      redraw = 1;
       if (results->cnt == 0) {
         break;
       };
@@ -273,8 +278,11 @@ int main(int argc, char *argv[]) {
 
     
 
-    draw(prompt, input, results, result_offset, selected_result);
-    free_results(results);
+    if (redraw) {
+	    draw(prompt, input, results, result_offset, selected_result);
+	    free_results(results);
+	    redraw = 0;
+    }
   }
   teardown();
   return 0;
