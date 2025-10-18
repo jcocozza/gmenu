@@ -1,6 +1,6 @@
-#include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "search.h"
 
@@ -34,7 +34,8 @@ int match(char *s1, char *s2, int ignore_case) {
   return res;
 }
 
-search_results_t *search(search_config_t search_config, item_list_t *list, char *term) {
+search_results_t *search(search_config_t search_config, item_list_t *list,
+                         char *term) {
   item_t **matches = malloc(list->cnt * sizeof(item_t *));
   if (!matches)
     return NULL;
@@ -54,10 +55,18 @@ search_results_t *search(search_config_t search_config, item_list_t *list, char 
   }
   // shrink to total search results not size of entire search space
   results->matches = realloc(results->matches, sizeof(item_t *) * results->cnt);
+  if (!results->matches) {
+    free(results->matches);
+    return NULL;
+  }
   return results;
 }
 
 void free_results(search_results_t *results) {
-  free(results->matches);
+  if (!results)
+    return;
+  if (results->matches) {
+    free(results->matches);
+  }
   free(results);
 }

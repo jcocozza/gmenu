@@ -273,20 +273,23 @@ int main(int argc, char *argv[]) {
   int result_offset = 0;
 
   int redraw = 1;
+
+  search_results_t *results = search(sc, list, input);
   while (!should_close()) {
     gmenu_keypress_t kp = get_key_press();
     // printf("key press: %d\n", kp.k);
-    search_results_t *results = search(sc, list, input);
+    // search_results_t *results = search(sc, list, input);
 
     if (redraw) {
+      results = search(sc, list, input);
       begin_draw();
       clear_screen();
       draw(prompt, input, results, result_offset, selected_result);
-      free_results(results);
       redraw = 0;
       end_draw();
     }
 
+    // NOTE: keep redraw as close to 'break' as possible
     while (kp.k != KEY_NONE) {
       switch (kp.k) {
       case KEY_NONE:
@@ -294,7 +297,6 @@ int main(int argc, char *argv[]) {
       case KEY_OTHER:
         break;
       case KEY_CHAR:
-        redraw = 1;
         if (strlen(input) >= input_count) {
           input = realloc(input, strlen(input) + 256);
           if (!input) {
@@ -305,16 +307,16 @@ int main(int argc, char *argv[]) {
         input[input_count] = kp.c;
         input[input_count + 1] = '\0';
         input_count++;
+        redraw = 1;
         break;
       case KEY_BACKSPACE:
-        redraw = 1;
         if (input_count > 0) {
+          redraw = 1;
           input_count--;
           input[input_count] = '\0';
         }
         break;
       case KEY_LEFT:
-        redraw = 1;
         if (results->cnt == 0) {
           break;
         };
@@ -325,9 +327,9 @@ int main(int argc, char *argv[]) {
           result_offset = results->cnt - 1;
           selected_result = results->cnt - 1;
         }
+        redraw = 1;
         break;
       case KEY_RIGHT:
-        redraw = 1;
         if (results->cnt == 0) {
           break;
         };
@@ -338,6 +340,7 @@ int main(int argc, char *argv[]) {
           result_offset = 0;
           selected_result = 0;
         }
+        redraw = 1;
         break;
       case KEY_ENTER:
         printf("%s", results->matches[selected_result]->value);
@@ -349,6 +352,8 @@ int main(int argc, char *argv[]) {
       }
       kp = get_key_press();
     }
+
+    //free_results(results);
   }
   teardown();
   return 0;
