@@ -30,7 +30,7 @@ jobs:
 
     - name: Build gmenu using Makefile
       run: |
-        if [ "${{ runner.os }}" == "Windows" ]; then
+        if [[ "${{ runner.os }}" == "Windows" ]]; then
           make windows
         else
           make macos
