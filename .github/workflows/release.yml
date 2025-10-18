@@ -29,6 +29,7 @@ jobs:
       run: choco install zip -y
 
     - name: Build gmenu using Makefile
+      shell: bash
       run: |
         if [[ "${{ runner.os }}" == "Windows" ]]; then
           make windows
