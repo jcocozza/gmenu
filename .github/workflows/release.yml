@@ -13,69 +13,41 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [macos-latest, windows-latest]
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Install dependencies (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        choco install make mingw -y
 
-      - name: Install dependencies (Linux)
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sudo apt update
-          sudo apt install -y build-essential cmake libgl1-mesa-dev libx11-dev libxcursor-dev libxrandr-dev libxi-dev libxinerama-dev
-          git clone https://github.com/raysan5/raylib.git
-          cd raylib/src && make PLATFORM=PLATFORM_DESKTOP && sudo make install
+    - name: Install zip (Windows)
+      if: matrix.os == 'windows-latest'
+      run: choco install zip -y
 
-      - name: Install dependencies (macOS)
-        if: matrix.os == 'macos-latest'
-        run: |
-          brew update
-          brew install raylib
+    - name: Build gmenu using Makefile
+      run: |
+        if [ "${{ runner.os }}" == "Windows" ]; then
+          make windows
+        else
+          make macos
+        fi
 
-      - name: Install dependencies (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          choco install make mingw -y
-          git clone https://github.com/raysan5/raylib.git
-          cd raylib/src && mingw32-make PLATFORM=PLATFORM_DESKTOP
-
-      - name: Install zip (Windows)
-        if: matrix.os == 'windows-latest'
-        run: choco install zip -y
-
-      - name: Build Linux
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          gcc -O2 -o gmenu main.c -lraylib -lm -lpthread -ldl
-        shell: bash
-
-      - name: Build Macos
-        if: matrix.os == 'macos-latest'
-        run: |
-          gcc -O2 -o gmenu main.c window_darwin.m -I/opt/homebrew/opt/raylib/include -L/opt/homebrew/opt/raylib/lib -lraylib -lm -lpthread -ldl -framework Cocoa -framework IOKit -framework CoreVideo -framework OpenGL
-        shell: bash
-
-      - name: Build Windows (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          gcc -O2 -o gmenu.exe main.c -Iraylib/src -Lraylib/src -lraylib -lopengl32 -lgdi32 -lwinmm -lshell32
-        shell: bash
 
       # --- Zip binary ---
-      - name: Zip binary
-        shell: bash
-        run: |
-          EXT=""
-          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            EXT=".exe"
-          fi
-          zip gmenu-${{ matrix.os }}${EXT}.zip gmenu${EXT}
+    - name: Zip binary
+      shell: bash
+      run: |
+        EXT=""
+        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+          EXT=".exe"
+        fi
+        zip gmenu-${{ matrix.os }}${EXT}.zip gmenu${EXT}
 
       # --- Upload to GitHub Release ---
-      - name: Upload to GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: gmenu-*.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload to GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: gmenu-*.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
