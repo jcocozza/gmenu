@@ -1,9 +1,9 @@
 #include "platform.h"
 #include "search.h"
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
 const int FONT_SIZE = 10;
 // flags
@@ -145,54 +145,55 @@ int iswhitespace(char *s) {
   return 1;
 }
 
-void draw(char *user_prompt, char *user_input, search_results_t *results, int result_offset, int selected_result) {
-	int max_width = screen_width();
-	int max_input_size = max_width;
-	int min_input_size = .25 * max_input_size;
+void draw(char *user_prompt, char *user_input, search_results_t *results,
+          int result_offset, int selected_result) {
+  int max_width = screen_width();
+  int max_input_size = max_width;
+  int min_input_size = .25 * max_input_size;
 
-	// TODO: this should not be in the render loop
-	int spacer_width = text_width("  ");
+  // TODO: this should not be in the render loop
+  int spacer_width = text_width("  ");
 
-	int prompt_len = strlen(user_prompt);
-	if (prompt_len != 0) {
-		prompt_len += 2; // 2 for ": "
-	}
+  int prompt_len = strlen(user_prompt);
+  if (prompt_len != 0) {
+    prompt_len += 2; // 2 for ": "
+  }
 
-	size_t final_size = prompt_len + strlen(user_input) + 1;
-	char final_prompt[final_size];
-	if (prompt_len == 0) {
-    		snprintf(final_prompt, final_size, "%s", user_input);
-	} else {
-    		snprintf(final_prompt, final_size, "%s: %s", user_prompt, user_input);
-	}
-	draw_text(final_prompt, 10, 10, GMENU_BLACK);
+  size_t final_size = prompt_len + strlen(user_input) + 1;
+  char final_prompt[final_size];
+  if (prompt_len == 0) {
+    snprintf(final_prompt, final_size, "%s", user_input);
+  } else {
+    snprintf(final_prompt, final_size, "%s: %s", user_prompt, user_input);
+  }
+  draw_text(final_prompt, 10, 10, GMENU_BLACK);
 
-	int prompt_width = text_width(final_prompt);
-	int results_width = max_width - prompt_width;
-	int rendered_results_width = 0;
-	int i = result_offset;
-	int offset = min_input_size;
-	if (prompt_width > min_input_size) {
-		offset = prompt_width;	
-	}
-	offset += spacer_width;
-	
-	while (rendered_results_width <= results_width && i < results->cnt) {
-		char *display_text = results->matches[i]->alias;
-		if (iswhitespace(display_text)) {
-			display_text = "<whitespace>";
-		}
+  int prompt_width = text_width(final_prompt);
+  int results_width = max_width - prompt_width;
+  int rendered_results_width = 0;
+  int i = result_offset;
+  int offset = min_input_size;
+  if (prompt_width > min_input_size) {
+    offset = prompt_width;
+  }
+  offset += spacer_width;
 
-		int display_text_width = text_width(display_text);
-		rendered_results_width += display_text_width + spacer_width;
-		if (i == selected_result) {
-			draw_text(display_text, offset, 10, GMENU_RED);
-		} else {
-			draw_text(display_text, offset, 10, GMENU_BLACK);
-		}
-		i++;
-		offset += display_text_width +  spacer_width;
-	}
+  while (rendered_results_width <= results_width && i < results->cnt) {
+    char *display_text = results->matches[i]->alias;
+    if (iswhitespace(display_text)) {
+      display_text = "<whitespace>";
+    }
+
+    int display_text_width = text_width(display_text);
+    rendered_results_width += display_text_width + spacer_width;
+    if (i == selected_result) {
+      draw_text(display_text, offset, 10, GMENU_RED);
+    } else {
+      draw_text(display_text, offset, 10, GMENU_BLACK);
+    }
+    i++;
+    offset += display_text_width + spacer_width;
+  }
 }
 
 int main(int argc, char *argv[]) {
@@ -271,7 +272,6 @@ int main(int argc, char *argv[]) {
   int selected_result = 0;
   int result_offset = 0;
 
-
   int redraw = 1;
   while (!should_close()) {
     gmenu_keypress_t kp = get_key_press();
@@ -279,76 +279,76 @@ int main(int argc, char *argv[]) {
     search_results_t *results = search(sc, list, input);
 
     if (redraw) {
-	    begin_draw();
-	    clear_screen();
-	    draw(prompt, input, results, result_offset, selected_result);
-	    free_results(results);
-	    redraw = 0;
-	    end_draw();
+      begin_draw();
+      clear_screen();
+      draw(prompt, input, results, result_offset, selected_result);
+      free_results(results);
+      redraw = 0;
+      end_draw();
     }
 
     while (kp.k != KEY_NONE) {
-   	switch (kp.k) {
-	    case KEY_NONE:
-	      break;
-	    case KEY_OTHER:
-	      break;
-	    case KEY_CHAR:
-	      redraw = 1;
-	      if (strlen(input) >= input_count) {
-		input = realloc(input, strlen(input) + 256);
-		if (!input) {
-		  perror("realloc");
-		  exit(1);
-		}
-	      }
-	      input[input_count] = kp.c;
-	      input[input_count + 1] = '\0';
-	      input_count++;
-	      break;
-	    case KEY_BACKSPACE:
-	      redraw = 1;
-	      if (input_count > 0) {
-		input_count--;
-		input[input_count] = '\0';
-	      }
-	      break;
-	    case KEY_LEFT:
-	      redraw = 1;
-	      if (results->cnt == 0) {
-		break;
-	      };
-	      if (result_offset > 0) {
-		result_offset--;
-		selected_result--;
-	      } else if (result_offset <= 0) { // to end
-		result_offset = results->cnt - 1;
-		selected_result = results->cnt - 1;
-	      }
-	      break;
-	    case KEY_RIGHT:
-	      redraw = 1;
-	      if (results->cnt == 0) {
-		break;
-	      };
-	      if (result_offset < results->cnt - 1) {
-		result_offset++;
-		selected_result++;
-	      } else { // back to beginning
-		result_offset = 0;
-		selected_result = 0;
-	      }
-	      break;
-	    case KEY_ENTER:
-	      printf("%s", results->matches[selected_result]->value);
-	      teardown();
-	      return 0;
-    	} 
-    	kp = get_key_press();
+      switch (kp.k) {
+      case KEY_NONE:
+        break;
+      case KEY_OTHER:
+        break;
+      case KEY_CHAR:
+        redraw = 1;
+        if (strlen(input) >= input_count) {
+          input = realloc(input, strlen(input) + 256);
+          if (!input) {
+            perror("realloc");
+            exit(1);
+          }
+        }
+        input[input_count] = kp.c;
+        input[input_count + 1] = '\0';
+        input_count++;
+        break;
+      case KEY_BACKSPACE:
+        redraw = 1;
+        if (input_count > 0) {
+          input_count--;
+          input[input_count] = '\0';
+        }
+        break;
+      case KEY_LEFT:
+        redraw = 1;
+        if (results->cnt == 0) {
+          break;
+        };
+        if (result_offset > 0) {
+          result_offset--;
+          selected_result--;
+        } else if (result_offset <= 0) { // to end
+          result_offset = results->cnt - 1;
+          selected_result = results->cnt - 1;
+        }
+        break;
+      case KEY_RIGHT:
+        redraw = 1;
+        if (results->cnt == 0) {
+          break;
+        };
+        if (result_offset < results->cnt - 1) {
+          result_offset++;
+          selected_result++;
+        } else { // back to beginning
+          result_offset = 0;
+          selected_result = 0;
+        }
+        break;
+      case KEY_ENTER:
+        printf("%s", results->matches[selected_result]->value);
+        teardown();
+        return 0;
+      case KEY_ESC:
+        teardown();
+        return 0;
+      }
+      kp = get_key_press();
     }
-
-    
-
   }
   teardown();
   return 0;
