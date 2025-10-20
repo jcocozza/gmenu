@@ -1,5 +1,2 @@
-- fix seg fault on 0 results (don't allow return)
-- clean up makefile and actions script (actions should do the setup, and just call make for building)
-
 possible future:
 - fuzzy search

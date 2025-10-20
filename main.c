@@ -343,6 +343,9 @@ int main(int argc, char *argv[]) {
         redraw = 1;
         break;
       case KEY_ENTER:
+        if (results->cnt == 0) {
+          break;
+        }
         printf("%s", results->matches[selected_result]->value);
         teardown();
         return 0;
@@ -352,8 +355,6 @@ int main(int argc, char *argv[]) {
       }
       kp = get_key_press();
     }
-
-    //free_results(results);
   }
   teardown();
   return 0;
